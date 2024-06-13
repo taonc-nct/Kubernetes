@@ -33,7 +33,7 @@ EOF
 ### 4. Kiểm tra và trình ký
 - kiểm tra csr lúc này crs sẽ chưa được approve nên trạng thái của nó sẽ là **PENDING**:
  
- > kubectl get csr :
+ > kubectl get csr
 
 - xem crs dưới dạng yaml. {spec.request} được hiểu như là lá đơn trình lên kubernetes để kubernetes ký cho chúng ta:
  > kubectl get csr taonc -o yaml
