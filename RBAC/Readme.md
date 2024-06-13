@@ -1,6 +1,6 @@
 # Phân quyền trong Kubernetes
 - Các bước phân quyền như sau: 
-
+![alt text](image/1.png)
 
 ### 1. create private key: 
  
