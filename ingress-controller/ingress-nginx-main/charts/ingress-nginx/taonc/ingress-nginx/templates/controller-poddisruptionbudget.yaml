@@ -1,0 +1,4 @@
+---
+# Source: ingress-nginx/templates/controller-poddisruptionbudget.yaml
+# PDB is not supported for DaemonSets.
+# https://github.com/kubernetes/kubernetes/issues/108124
