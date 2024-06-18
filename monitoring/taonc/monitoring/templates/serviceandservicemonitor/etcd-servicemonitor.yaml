@@ -1,0 +1,24 @@
+---
+# Source: monitoring/templates/serviceandservicemonitor/etcd-servicemonitor.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: kube-etcd
+    release: k8s
+    owner: PCN-KCNTT-VTT
+    developer: hieuhv13-taonc-dunglq
+  name: kube-etcd
+  namespace: monitoring
+spec:
+  endpoints:
+    - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      port: http-metrics
+  jobLabel: app
+  namespaceSelector:
+    matchNames:
+      - kube-system
+  selector:
+    matchLabels:
+      app: kube-etcd
+      release: k8s

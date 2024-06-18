@@ -1,0 +1,27 @@
+---
+# Source: monitoring/templates/manifests/blackboxExporter-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/name: blackbox-exporter
+    app.kubernetes.io/part-of: kube-prometheus
+    app.kubernetes.io/version: 0.24.0
+    app.owner: nguyenchitao
+    app.developer: nguyenchitao
+  name: blackbox-exporter
+  namespace: monitoring
+spec:
+  ports:
+  - name: http
+    port: 9115
+    targetPort: http
+    
+  - name: probe
+    port: 19115
+    targetPort: probe
+  selector:
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/name: blackbox-exporter
+    app.kubernetes.io/part-of: kube-prometheus

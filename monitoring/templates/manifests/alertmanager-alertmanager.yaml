@@ -1,0 +1,49 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Alertmanager
+metadata:
+  labels:
+    app.kubernetes.io/component: alert-router
+    app.kubernetes.io/instance: main
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/part-of: kube-prometheus
+    app.kubernetes.io/version: {{ .Values.images.alertmanager.tag }}
+    app.owner: {{ .Values.labels.owner }}
+    app.developer: {{ .Values.labels.developer }}
+  name: main
+  namespace: {{ .Values.namespace }}
+spec:
+  containers:
+    - env: []
+      image: {{ .Values.images.alertmanager.image }}
+      name: alertmanager
+      volumeMounts:
+        - mountPath: /etc/localtime
+          name: timezone
+  nodeSelector:
+    kubernetes.io/os: linux
+  podMetadata:
+    labels:
+      app.kubernetes.io/component: alert-router
+      app.kubernetes.io/instance: main
+      app.kubernetes.io/name: alertmanager
+      app.kubernetes.io/part-of: kube-prometheus
+      app.kubernetes.io/version: {{ .Values.images.alertmanager.tag }}
+  replicas: 1
+  resources:
+    limits:
+      cpu: 100m
+      memory: 100Mi
+    requests:
+      cpu: 4m
+      memory: 100Mi
+  secrets: []
+  securityContext:
+    fsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+  serviceAccountName: alertmanager-main
+  version: {{ .Values.images.alertmanager.tag }}
+  volumes:
+    - hostPath:
+        path: /usr/share/zoneinfo/Asia/Ho_Chi_Minh
+      name: timezone

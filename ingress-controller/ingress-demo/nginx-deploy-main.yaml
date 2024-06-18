@@ -17,3 +17,23 @@ spec:
       containers:
       - image: nginx
         name: nginx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: "2024-06-18T15:52:50Z"
+  labels:
+    run: nginx
+  name: nginx-deploy-main
+  namespace: default
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    run: nginx-main
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

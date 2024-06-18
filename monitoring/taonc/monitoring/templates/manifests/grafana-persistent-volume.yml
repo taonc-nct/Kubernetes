@@ -1,0 +1,14 @@
+---
+# Source: monitoring/templates/manifests/grafana-persistent-volume.yml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-pv-claim
+  namespace: monitoring
+spec:
+  storageClassName: nfs-client-retain
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

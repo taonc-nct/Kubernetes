@@ -5,7 +5,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: nginx.example.com
+  - host: taonc.example.com
     http:
       paths:
       - path: /
@@ -15,7 +15,7 @@ spec:
             name: nginx-deploy-main
             port:
               number: 80
-  - host: blue.nginx.example.com
+  - host: blue.taonc.example.com
     http:
       paths:
       - path: /
@@ -25,7 +25,7 @@ spec:
             name: nginx-deploy-blue
             port:
               number: 80
-  - host: green.nginx.example.com
+  - host: green.taonc.example.com
     http:
       paths:
       - path: /

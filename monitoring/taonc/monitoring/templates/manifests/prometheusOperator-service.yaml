@@ -1,0 +1,24 @@
+---
+# Source: monitoring/templates/manifests/prometheusOperator-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: prometheus-operator
+    app.kubernetes.io/part-of: kube-prometheus
+    app.kubernetes.io/version: 0.69.0
+  name: prometheus-operator
+  namespace: monitoring
+spec:
+  clusterIP: None
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: http
+  selector:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: prometheus-operator
+    app.kubernetes.io/part-of: kube-prometheus
+  type: ClusterIP

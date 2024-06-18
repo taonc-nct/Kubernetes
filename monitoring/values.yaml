@@ -1,0 +1,43 @@
+
+labels:
+  owner: nguyenchitao
+  developer: nguyenchitao
+namespace: monitoring
+
+pvc:
+  grafana:  
+    name: grafana-pv-claim
+    storageClassName: nfs-client-retain
+  prometheus_storageclassName: standard
+  
+images:
+  alertmanager:
+    image: quay.io/prometheus/alertmanager:v0.26.0 
+    tag: 0.26.0
+  blackbox_exporter:
+    image: quay.io/prometheus/blackbox-exporter:v0.24.0 
+    tag: 0.24.0
+  grafana: 
+    image: grafana/grafana:10.2.0
+    tag: 10.2.0
+  kube_state_metric:
+    image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.9.2 
+    tag: 2.9.2  
+  node_exporter: 
+    image: quay.io/prometheus/node-exporter:v1.6.1
+    tag: 1.6.1
+  prometheus:
+    image: quay.io/prometheus/prometheus:v2.47.2
+    tag: 2.47.2
+  prometheus_adapter:
+    image: quay.io/prometheus/alertmanager:v0.25.0 
+    tag: v0.25.0
+  prometheus_operator: 
+    image: quay.io/prometheus-operator/prometheus-operator:v0.69.0
+    tag: 0.69.0
+  prometheus_config_reloader:
+    image: quay.io/prometheus/alertmanager:v0.25.0 
+    tag: v0.25.0
+  cert_exporter: 
+    image: quay.io/prometheus/alertmanager:v0.25.0 
+    tag: v0.25.0

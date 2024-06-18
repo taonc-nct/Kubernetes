@@ -1,0 +1,103 @@
+---
+# Source: monitoring/templates/manifests/kubeStateMetrics-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/part-of: kube-prometheus
+    app.kubernetes.io/version: 2.9.2
+    app.owner: nguyenchitao
+    app.developer: nguyenchitao
+  name: kube-state-metrics
+  namespace: monitoring
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 2
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: exporter
+      app.kubernetes.io/name: kube-state-metrics
+      app.kubernetes.io/part-of: kube-prometheus
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: kube-state-metrics
+      labels:
+        app.kubernetes.io/component: exporter
+        app.kubernetes.io/name: kube-state-metrics
+        app.kubernetes.io/part-of: kube-prometheus
+        app.kubernetes.io/version: 2.9.2
+
+    spec:
+      automountServiceAccountToken: true
+      containers:
+        - args:
+          - --host=0.0.0.0
+          - --port=8443
+          - --telemetry-host=0.0.0.0
+          - --telemetry-port=9443
+          - --metric-labels-allowlist=nodes=[*]
+          image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.9.2
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 8443
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: kube-state-metrics
+          ports:
+            - containerPort: 8443
+              name: http-main
+              protocol: TCP
+            - containerPort: 9443
+              name: http-self
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 9443
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: 100m
+              memory: 250Mi
+            requests:
+              cpu: 10m
+              memory: 190Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      nodeSelector:
+        
+        app.kubernetes.io/name: linux
+      serviceAccountName: kube-state-metrics

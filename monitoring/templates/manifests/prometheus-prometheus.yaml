@@ -1,0 +1,113 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  labels:
+    app.kubernetes.io/component: prometheus
+    app.kubernetes.io/instance: k8s
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: kube-prometheus
+    app.kubernetes.io/version: {{ .Values.images.prometheus.tag}}
+    app.owner: {{ .Values.labels.owner }}
+    app.developer: {{ .Values.labels.developer }}
+  name: k8s
+  namespace: {{ .Values.namespace }}
+spec:
+  alerting:
+    alertmanagers:
+    - apiVersion: v2
+      name: alertmanager-main
+      namespace: {{ .Values.namespace }}
+      port: web
+  containers: 
+    - env: []
+      image: {{ .Values.images.prometheus.image}}
+      livenessProbe:
+        failureThreshold: 100
+        initialDelaySeconds: 120
+      name: prometheus
+      readinessProbe:
+        failureThreshold: 100
+        initialDelaySeconds: 60
+      startupProbe:
+        failureThreshold: 100
+        initialDelaySeconds: 120
+      volumeMounts:
+        - mountPath: /etc/localtime
+          name: timezone
+    - image: quay.io/prometheus-operator/prometheus-config-reloader:v0.69.0
+      livenessProbe:
+        failureThreshold: 5
+        httpGet:
+          path: /healthz
+          port: http
+          scheme: HTTP
+        initialDelaySeconds: 20
+        periodSeconds: 15
+        successThreshold: 1
+        timeoutSeconds: 10
+      name: config-reloader
+      ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+      readinessProbe:
+        httpGet:
+          path: /metrics
+          port: http
+          scheme: HTTP
+        initialDelaySeconds: 20
+        periodSeconds: 15
+        successThreshold: 1
+        timeoutSeconds: 10
+  enableFeatures: []
+  evaluationInterval: 30s
+  externalLabels:
+    cluster:  taonc-test
+  nodeSelector:
+        {{ include "monitoring.selectorLabels" . | nindent 4 }}
+  podMetadata:
+    labels:
+      app.kubernetes.io/component: prometheus
+      app.kubernetes.io/instance: k8s
+      app.kubernetes.io/name: prometheus
+      app.kubernetes.io/part-of: kube-prometheus
+      app.kubernetes.io/version: {{ .Values.images.prometheus.tag}}
+  podMonitorNamespaceSelector: {}
+  podMonitorSelector: {}
+  probeNamespaceSelector: {}
+  probeSelector: {}
+  replicas: 1
+  resources:
+    requests:
+      memory: 400Mi
+  ruleNamespaceSelector: {}
+  ruleSelector: {}
+  scrapeConfigNamespaceSelector: {}
+  scrapeConfigSelector: {}
+  securityContext:
+    fsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+  serviceAccountName: prometheus-k8s
+  storage:
+    volumeClaimTemplate:
+      spec:
+        resources:
+          requests:
+            storage: 5Gi
+        storageClassName: {{ .Values.pvc.prometheus_storageclassName }}
+  tolerations:
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/control-plane
+      operator: Exists
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/master
+      operator: Exists
+  serviceMonitorNamespaceSelector: {}
+  serviceMonitorSelector: {}
+  version: {{ .Values.images.prometheus.tag}}
+  volumes:
+    - hostPath:
+        path: /usr/share/zoneinfo/Asia/Ho_Chi_Minh
+      name: timezone
+

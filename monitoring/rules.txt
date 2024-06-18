@@ -1,0 +1,520 @@
+  
+  - name: prometheus-warning
+    rules:
+      - alert: kube_deployment_replicas_mismatch
+        expr: |-
+            avg without(instance)((kube_deployment_spec_replicas{job="kube-state-metrics",namespace=~".*"} > kube_deployment_status_replicas_available{job="kube-state-metrics",namespace=~".*"}) and (changes(kube_deployment_status_replicas_updated{job="kube-state-metrics",namespace=~".*"}[10m]) == 0))
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          description: Deployment {{ $labels.namespace }}/{{ $labels.deployment }} có số lượng replicas triển khai khác với số lượng khai báo.
+          summary: Deployment triển khai thiếu Replicaset.
+          value: 'Deployment Mismatch'
+          workload: '{{ $labels.namespace }}/{{ $labels.deployment }}'
+
+      - alert: kube_statefulSet_replicas_mismatch
+        expr: |-
+            avg without(instance)((kube_statefulset_status_replicas_ready{job="kube-state-metrics",namespace=~".*"} != kube_statefulset_status_replicas{job="kube-state-metrics",namespace=~".*"}) and (changes(kube_statefulset_status_replicas_updated{job="kube-state-metrics",namespace=~".*"}[10m])) == 0)
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          description: StatefulSet {{ $labels.namespace }}/{{ $labels.statefulset }} có số lượng pod triển khai khác với khai báo.
+          summary: StatefulSet triển khai thiếu pod, tình trạng diễn ra hơn 10m.
+          value: StatefulSet Mismatch
+          workload: '{{ $labels.namespace }}/{{ $labels.statefulset }}'
+
+      - alert: kube_daemonset_rollout_stuck
+        expr: |-
+          avg without(instance)(((kube_daemonset_status_current_number_scheduled{job="kube-state-metrics",namespace=~".*"} != kube_daemonset_status_desired_number_scheduled{job="kube-state-metrics",namespace=~".*"}) or (kube_daemonset_status_number_misscheduled{job="kube-state-metrics",namespace=~".*"} != 0) or (kube_daemonset_status_updated_number_scheduled{job="kube-state-metrics",namespace=~".*"} != kube_daemonset_status_desired_number_scheduled{job="kube-state-metrics",namespace=~".*"}) or (kube_daemonset_status_number_available{job="kube-state-metrics",namespace=~".*"} != kube_daemonset_status_desired_number_scheduled{job="kube-state-metrics",namespace=~".*"})) and (changes(kube_daemonset_status_updated_number_scheduled{job="kube-state-metrics",namespace=~".*"}[10m]) == 0))
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          description: DaemonSet {{ $labels.namespace }}/{{ $labels.daemonset }} không thể triển khai.
+          summary: DaemonSet không thể triển khai, trạng thái này kéo dài hơn 10m.
+          value: 'DaemonsetStuck'
+          workload: '{{ $labels.namespace }}/{{ $labels.daemonset }}'
+
+      - alert: kube_daemonset_not_scheduled
+        expr: |- 
+          avg without(instance)(kube_daemonset_status_desired_number_scheduled{job="kube-state-metrics",namespace=~".*"} - kube_daemonset_status_current_number_scheduled{job="kube-state-metrics",namespace=~".*"}) > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          description: 
+          summary: DaemonSet đang gặp lỗi "not scheduled".
+          value: 'DaemonSetNotScheduled'
+          workload: '{{ $labels.namespace }}/{{ $labels.daemonset }}'
+
+      - alert: kube_pod_crash_looping
+        expr: |- 
+          avg without(instance)(max_over_time(kube_pod_container_status_waiting_reason{job=~"kube-state-metrics", namespace=~".*", reason=~".*"}[1m])) >= 1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          description: Pod {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }}) đang trong trạng thái {{ $labels.reason }}".
+          summary: Pod của ứng dụng đang gặp lỗi crash looping.
+          value: '{{ $labels.reason }}'
+          workload: '{{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }})'
+
+      - alert: kube_node_status_condition_diskPressure
+        expr: |- 
+          label_replace(avg without(instance)(kube_node_status_condition{condition="DiskPressure",status="true"}==1),"instance", "${1}", "node", "(.*)")
+        for: 1m
+        labels:
+          severity: warning
+          job: kube-state-metrics
+          namespace: none
+        annotations:
+          description: Node {{ $labels.node }} in status DiskPressure.
+          summary: Node {{ $labels.node }} not running because  error DiskPressure
+          value: 'DiskPressure'
+
+      - alert: kube_node_status_condition_memory_pressure
+        expr: |- 
+          label_replace(avg without(instance)(kube_node_status_condition{condition="MemoryPressure",status="true"}==1),"instance", "${1}", "node", "(.*)")
+        for: 1m
+        labels:
+          severity: warning
+          job: kube-state-metrics
+          namespace: none
+        annotations:
+          description: Node {{ $labels.node }} in status MemoryPressure.
+          summary: Node {{ $labels.node }} not running because errorMemoryPressure
+          value: MemoryPressure
+
+      - alert: kube_node_status_condition_network_unavailable
+        expr: |- 
+          label_replace(avg without(instance)(kube_node_status_condition{condition="NetworkUnavailable",status="true"}==1),"instance", "${1}", "node", "(.*)")
+        for: 1m
+        labels:
+          severity: warning
+          job: kube-state-metrics
+        annotations:
+          description: Node {{ $labels.node }} in status {{ $labels.condition }}.
+          summary: Node {{ $labels.node }} not running because error NetworkUnavailable
+          value: NetworkUnavailable
+
+      - alert: kube_node_status_condition_noReady
+        expr: |- 
+          label_replace(avg without (instance) (kube_node_status_condition{condition="Ready",status="true"} == 0), "instance", "${1}", "node", "(.*)")
+        for: 1m
+        labels:
+          severity: warning
+          job: kube-state-metrics
+          namespace: none
+        annotations:
+          description: Node {{ $labels.node }} in status NoReady.
+          summary: Node {{ $labels.node }} not running because error NoReady
+          value: NoReady
+
+      - alert: kube_pod_overload_CPU
+        expr: |- 
+          label_replace(sum by(pod,node,namespace)( avg without(instance)(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{ node=~".*"})),"instance", "${1}", "node", "(.*)")/ label_replace(sum by (pod,node, namespace)(avg without(instance)(cluster:namespace:pod_cpu:active:kube_pod_container_resource_limits{ node=~".*"})),"instance", "${1}", "node", "(.*)") *100 > 95
+        for: 1m
+        labels:
+          severity: warning
+          job: kube-state-metrics
+        annotations:
+          description: Pod {{ $labels.pod }} in {{ $labels.namespace }}/({{ $labels.node }}) overload CPU > 90%
+          summary: Pod overload CPU 
+          value: '{{ $value | printf "%.2f" }}'
+
+      - alert: kube_pod_overload_RAM
+        expr: |- 
+          label_replace(sum by (pod, node,namespace) (avg without (instance) (node_namespace_pod_container:container_memory_working_set_bytes{container!="",node=~".*"})),"instance", "${1}", "node", "(.*)") / label_replace(sum by (pod, node,namespace) (avg without (instance) (cluster:namespace:pod_memory:active:kube_pod_container_resource_limits{node=~".*"})),"instance", "${1}", "node", "(.*)")  * 100 > 95
+        for: 1m   
+        labels:
+          severity: warning
+          job: kube-state-metrics
+        annotations:
+          description: Pod {{ $labels.pod }} in {{ $labels.namespace }}/({{ $labels.node }}) overload RAM > 95%
+          summary: Pod overload RAM 
+          value: '{{ $value | printf "%.2f" }}'
+
+
+      - alert: etcd_members_down
+        expr: max without (endpoint) ( (up{job=~".*etcd.*", cluster=~".*"} == bool 0) or count without (To) ((rate(etcd_network_peer_sent_failures_total{job=~".*etcd.*"}[2m])) > 0.01)) > 0
+        for: 5m
+        labels:
+          type: services_code
+          severity: warning
+        annotations:
+          description: etcd members ({{ $labels.instance}}:) are down ({{ $value }})
+          summary: etcd cluster members are down
+
+      - alert: etcd_insufficient_members
+        expr:  (up{job=~".*etcd.*", cluster=~".*"} == bool 1) < ((up{job=~".*etcd.*"}) + 1) / 2
+        for: 5m
+        labels:
+          type: services_code
+          severity: warning
+        annotations:
+          description: cụm etcd ({{ $labels.instance}}:) không đủ node ({{ $value }})
+          summary: etcd cluster không đủ số node
+
+      - alert: kube_overload_login
+        expr: |- 
+          avg without(instance)(round(avg(einvoice_user_login_by_15m{cluster=~".*"}))) > 40000
+        for: 10m   
+        labels:
+          severity: warning
+          job: kube-state-metrics
+        annotations:
+          description: The number of logins is too large. The system receives more 40000
+          summary: Login system overload
+          
+      - alert: kube_webapp_status_down
+        expr: |- 
+          probe_success{cluster=~".*"} == 0
+        for: 10m   
+        labels:
+          severity: warning
+          job: kube-state-metrics
+        annotations:
+          description: Probe web hddt have status down.
+          summary: Web app hddt status down
+
+      - alert: kube_pod_not_ready
+        expr: label_replace(avg without (instance) ((((kube_pod_status_phase{job="kube-state-metrics",namespace=~".*",phase=~"Pending|Unknown|Failed", cluster=~".*"}) * on (namespace, pod, cluster) group_left (owner_kind) topk by (namespace, pod, cluster) (1, max by (namespace, pod, owner_kind, cluster) (kube_pod_owner{owner_kind!="Job"}))) > 0) *on (pod,uid,instance)group_left(node, created_by_kind, host_ip, namespace, created_by_name)kube_pod_info),  "instance", "${1}", "host_ip", "(.*)")
+        for: 1m
+        labels:
+          group: v_app 
+          type: services_code
+          severity: warning
+          job: kube-state-metrics
+        annotations:
+          description: Pod {{ $labels.namespace }}/{{ $labels.pod }} đang trong {{ $labels.phase }} trong vòng 5m
+          summary: Pod triển khai đang bị lỗi, pod ở trạng thái non_ready
+        
+      - alert: kube_scheduler_down
+        expr: |- 
+          absent(up{job="kube-scheduler", cluster=~".*"} == 1)
+        for: 5m
+        labels:
+          group: v_app 
+          type: services_code
+          severity: warning
+          job: kube-state-metrics
+        annotations:
+          description: KubeScheduler has disappeared from Prometheus target discovery
+          summary: Target disappeared from Prometheus target discovery
+      
+      - alert: kube_kubelet_down
+        expr: |- 
+          absent(up{job="kubelet",metrics_path="/metrics", cluster=~".*"} == 1)
+        for: 5m
+        labels:
+          group: v_app 
+          type: services_code
+          severity: warning
+          job: kube-state-metrics
+        annotations:
+          description: Kubelet has disappeared from Prometheus target discovery
+          summary: Target disappeared from Prometheus target discovery
+
+      - alert: kube_controller_manager_down
+        expr: |- 
+          absent(up{job="kube-controller-manager", cluster=~".*"} == 1)
+        for: 5m
+        labels:
+          group: v_app 
+          type: services_code
+          severity: warning
+          job: kube-state-metrics
+        annotations:
+          description: KubeControllerManager has disappeared from Prometheus target discovery
+          summary: Target disappeared from Prometheus target discovery
+      
+      - alert: kube_proxy_down
+        expr: |- 
+          absent(up{job="kube-controller-manager", cluster=~".*" } == 1)
+        for: 5m
+        labels:
+          group: v_app 
+          type: services_code
+          severity: warning
+          job: kube-state-metrics
+        annotations:
+          description: KubeControllerManager has disappeared from Prometheus target discovery
+          summary: Target disappeared from Prometheus target discovery
+
+      - alert: kube_API_down
+        expr: |- 
+          absent(up{job="apiserver", cluster=~".*"} == 1)
+        for: 5m
+        labels:
+          group: v_app 
+          type: services_code
+          severity: warning
+          job: kube-state-metrics
+        annotations:
+          description: KubeAPI has disappeared from Prometheus target discovery
+          summary: Target disappeared from Prometheus target discovery
+
+  - name: hddt-node-exporter-warning
+    rules:
+      - alert: NodeNotReady 
+        expr: up{job="node-exporter"}==0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          description: |-
+            Hiện tại node {{  $labels.instance}} đang ở trạng thái không sẵn sàng trong 10m.
+          summary: Hiện tại node {{  $labels.instance}} đang ở trạng thái không sẵn sàng.
+          value: NotReady
+
+      - alert: HostHighCpuLoad
+        expr: sum_over_time(sd_agent_high_cpu_load_15m[10m]) > 90
+        for: 5m
+        labels:
+          group: v_server
+          type: server
+          severity: critical
+        annotations:
+          summary: "Node high cpu load"
+          description: 'CPU load (15m) is high, VALUE: {{ printf "%.2f" $value }}'
+          value: '{{ $value | printf "%.2f" }}'
+
+      - alert: HostOutOfMemory
+        expr: avg_over_time(sd_agent_node_memory_usage_percent[10m]) > 90
+        for: 5m
+        labels:
+          group: v_server
+          type: server
+          severity: major
+        annotations:
+          summary: "Node high memory usage"
+          description: 'Node memory is filling up, VALUE =  {{ $value | printf "%.2f" }} > 90%'
+          value: '{{ $value | printf "%.2f" }}'
+
+      - alert: HostUnusualDiskReadRate
+        annotations:
+          description: |-
+            Tốc độ đọc ổ đĩa của máy chủ {{ $labels.instance }} bất thường (> 300 MB/s).
+
+            Tốc độ đọc hiện tại: {{ $value | printf "%.2f" }} MB/s
+          summary: Máy chủ {{ $labels.instance }} tốc độ đọc đĩa bất thường.
+          value: '{{ $value | printf "%.2f" }} MB/s'
+        expr: >-
+          (sum by (instance, job, namespace, nodename)  (rate(node_disk_read_bytes_total[10m])) / 1024 /
+          1024 > 300) * on(instance) group_left (nodename)
+          node_uname_info{nodename=~".+"}
+
+        for: 10m
+        labels:
+          severity: warning
+
+      - alert: HostUnusualDiskWriteRate
+        annotations:
+          description: |-
+            Tốc độ ghi ổ đĩa của máy chủ {{ $labels.instance }} bất thường (> 300 MB/s).
+            
+            Tốc độ ghi hiện tại: {{ $value | printf "%.2f" }} MB/s
+          summary: Máy chủ {{ $labels.instance }} tốc độ ghi đĩa bất thường.
+          value: '{{ $value | printf "%.2f" }}  MB/s'
+        expr: >-
+          (sum by (instance, job, namespace, nodename) (rate(node_disk_written_bytes_total[3m])) / 1024 / 1024 > 300) * on (instance) group_left (nodename) node_uname_info{nodename!~"|"}
+        for: 10m
+        labels:
+          severity: warning
+
+      - alert: Cảnh báo Network interfaces. Thông lượng dữ liệu nhận vào quá lớn.
+        expr: |- 
+          (sum by (instance, job, namespace, nodename) (rate(node_network_receive_bytes_total[10m])) / 1024 / 1024 > 120) * on (instance) group_left (nodename) node_uname_info{nodename!~"|"} or (sum by (instance, job, namespace, nodename) (rate(node_network_receive_bytes_total[10m])) / 1024 / 1024 > 110) * on (instance) group_left (nodename) node_uname_info{nodename!~"|"}
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Lưu lượng network nhận vào quá lớn (instance {{ $labels.instance }})
+          description: |-
+            "Cảnh báo thông lượng dữ liệu nhận vào tại  {{ $labels.instance }} hiện tại {{ $value | printf "%.2f" }}MB/s  (> 120 MB/s) "
+          value: '{{ $value | printf "%.2f" }} MB/s'
+
+      - alert: Cảnh báo Network interfaces.Thông lượng dữ liệu đầu ra quá lớn
+        expr: |- 
+          (sum by (instance, job, namespace, nodename) (rate(node_network_transmit_bytes_total[10m])) / 1024 / 1024 > 120) * on (instance) group_left (nodename) node_uname_info{nodename!~"|"} or (sum by (instance, job, namespace, nodename) (rate(node_network_transmit_bytes_total[10m])) / 1024 / 1024 > 110) * on (instance) group_left (nodename) node_uname_info{nodename!~"|"}
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Thông lượng dữ liệu đầu ra quá lớn (instance {{ $labels.instance }})
+          description: |-
+            "Cảnh báo thông lượng dữ liệu đầu ra tại  {{ $labels.instance }} hiện tại {{ $value | printf "%.2f" }}MB/s  (> 120 MB/s) "
+          value: '{{ $value | printf "%.2f" }} MB/s'
+
+      - alert: DiskSpace
+        expr: |- 
+          100 - (100 * node_filesystem_avail_bytes / node_filesystem_size_bytes) > 95
+        for: 10m 
+        labels:
+          severity: warning
+        annotations:
+          summary: "Hiện  {{ $labels.instance }} đang hết dung lượng ổ cứng"
+          description: |-
+            Hiện tại {{ $labels.instance }} đang sắp hết dung lượng ổ cứng.
+            {{ $labels.instance }} sử dụng {{ $value | printf "%.2f" }}% dung lượng ổ cứng {{ $labels.mountpoint}}"
+          value: '{{ $value | printf "%.2f" }}%'
+
+  - name: node_rules
+    rules:
+      - alert: node_sd_agent_down
+        expr: avg_over_time(up{job=~".*sd_agent.*"}[10m]) < 0.7
+        for: 5m
+        labels:
+          group: v_server
+          type: server
+          severity: critical
+        annotations:
+          summary: "Monitor sd agent down"
+          description: "Linux sd_agent has been down for more than 5 minutes"
+          alert_id: "linux_node_sd_agent_down_critical"
+          value: "{{ $value }}"
+
+      - alert: node_ntpd_service_down
+        expr: avg_over_time(node_ntp_ntpd_up{job=~".*sd_agent.*"}[10m]) < 0.7
+        for: 5m
+        labels:
+          group: v_server
+          type: server
+          severity: critical
+        annotations:
+          summary: "NTP service down"
+          description: "Ntp service is possibly down for more than 5 minutes"
+          alert_id: "linux_node_ntpd_service_down_critical"
+          value: "{{ $value }}"
+
+      - alert: node_ntp_not_synced
+        expr: node_ntp_stratum{job=~".*sd_agent.*"} > 10
+        for: 15m
+        labels:
+          group: v_server
+          type: server
+          severity: major
+        annotations:
+          summary: "NTP synchronization issue"
+          description: "Linux sd_agent unsynchronised NTP"
+          alert_id: "linux_node_ntp_not_synced_major"
+          value: "{{ $value }}"
+
+      - alert: node_high_cpu_load
+        expr: sum_over_time(sd_agent_high_cpu_load_15m[10m]) > 5
+        for: 5m
+        labels:
+          group: v_server
+          type: server
+          severity: critical
+        annotations:
+          summary: "Node high cpu load"
+          description: 'CPU load (15m) is high, VALUE: {{ printf "%.2f" $value }}'
+          alert_id: "linux_node_high_cpu_load_critical"
+          value: "{{ $value }}"
+
+      - alert: node_high_memory_usage
+        expr: avg_over_time(sd_agent_node_memory_usage_percent[10m]) > 90
+        for: 5m
+        labels:
+          group: v_server
+          type: server
+          severity: major
+        annotations:
+          summary: "Node high memory usage"
+          description: "Node memory is filling up, VALUE = {{ humanize $value }}% (> 90%)"
+          alert_id: "linux_node_high_memory_usage_major"
+          value: "{{ $value }}"
+
+      - alert: node_high_memory_usage
+        expr: avg_over_time(sd_agent_node_memory_usage_percent[10m]) > 95
+        for: 5m
+        labels:
+          group: v_server
+          type: server
+          severity: critical
+        annotations:
+          summary: "Node high memory usage"
+          description: "Node memory is filling up, VALUE = {{ humanize $value }}% (> 95%)"
+          alert_id: "linux_node_high_memory_usage_critical"
+          value: "{{ $value }}"
+
+      - alert: node_high_storage_usage
+        expr: avg_over_time(sd_agent_node_storage_usage_percent[5m]) > 90
+        for: 5m
+        labels:
+          group: v_server
+          type: server
+          severity: major
+        annotations:
+          summary: "Node high storage usage"
+          description: "{{ $labels.mountpoint }} is almost full, VALUE = {{ humanize $value }}% (> 90%)"
+          alert_id: "linux_node_high_storage_usage_major"
+          value: "{{ $value }}"
+
+      - alert: node_high_storage_usage
+        expr: avg_over_time(sd_agent_node_storage_usage_percent[5m]) > 95
+        for: 5m
+        labels:
+          group: v_server
+          type: server
+          severity: critical
+        annotations:
+          summary: "Node high storage usage"
+          description: "{{ $labels.mountpoint }} is almost full, VALUE = {{ humanize $value }}% (> 95%)"
+          alert_id: "linux_node_high_storage_usage_critical"
+          value: "{{ $value }}"
+
+      - alert: node_high_storage_usage_predict
+        expr: predict_linear(node_filesystem_free_bytes{device!~"(rootfs|tmpfs)",job=~".*sd_agent.*"}[1h], 2 * 3600) < 0
+        for: 5m
+        labels:
+          group: v_server
+          type: server
+          severity: major
+        annotations:
+          summary: "Node storage is filling up"
+          description: "{{ $labels.mountpoint }} in {{ $labels.instance }} is filling up in 2 hours"
+          alert_id: "linux_node_high_storage_usage_predict_major"
+          value: "{{ $value }}"
+
+      - alert: node_high_swap_usage
+        expr: avg_over_time(sd_agent_node_swap_usage_percent[10m]) > 80
+        for: 5m
+        labels:
+          group: v_server
+          type: server
+          severity: major
+        annotations:
+          summary: "Node high swap usage"
+          description: "Node has swap high usage, VALUE = {{ humanize $value }}% ( > 80%)"
+          alert_id: "linux_node_high_swap_usage_major"
+          value: "{{ $value }}"
+
+      - alert: node_high_swap_usage
+        expr: avg_over_time(sd_agent_node_swap_usage_percent[10m]) > 85
+        for: 5m
+        labels:
+          group: v_server
+          type: server
+          severity: critical
+        annotations:
+          summary: "Node high swap usage"
+          description: "Node has swap high usage, VALUE = {{ humanize $value }}% ( > 85%)"
+          alert_id: "linux_node_high_swap_usage_critical"
+          value: "{{ $value }}"
+
+      - alert: node_max_openfile_usage
+        expr: (node_filefd_allocated{job=~".*sd_agent.*"} / node_filefd_maximum{job=~".*sd_agent.*"}) * 100 > 75
+        for: 5m
+        labels:
+          group: v_server
+          type: server
+          severity: major
+        annotations:
+          summary: "Node opens too many files"
+          description: "Node opens too many files, VALUE = {{ humanize $value }}% ( > 75%)"
+          alert_id: "linux_node_max_openfile_usage_major"
+          value: "{{ $value }}"

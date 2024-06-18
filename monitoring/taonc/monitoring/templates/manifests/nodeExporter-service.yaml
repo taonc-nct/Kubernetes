@@ -1,0 +1,22 @@
+---
+# Source: monitoring/templates/manifests/nodeExporter-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/name: node-exporter
+    app.kubernetes.io/part-of: kube-prometheus
+    app.kubernetes.io/version: 1.6.1
+  name: node-exporter
+  namespace: monitoring
+spec:
+  clusterIP: None
+  ports:
+  - name: http
+    port: 9100
+    targetPort: http
+  selector:
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/name: node-exporter
+    app.kubernetes.io/part-of: kube-prometheus

@@ -1,0 +1,26 @@
+---
+# Source: monitoring/templates/manifests/kubeStateMetrics-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/part-of: kube-prometheus
+    app.kubernetes.io/version: 2.9.2
+
+  name: kube-state-metrics
+  namespace: monitoring
+spec:
+  clusterIP: None
+  ports:
+  - name: http-main
+    port: 8443
+    targetPort: http-main
+  - name: http-self
+    port: 9443
+    targetPort: http-self
+  selector:
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/part-of: kube-prometheus

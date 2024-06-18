@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.pvc.grafana.name}}
+  namespace: {{ .Values.namespace }}
+spec:
+  storageClassName: {{ .Values.pvc.grafana.storageClassName}}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

@@ -1,0 +1,206 @@
+---
+# Source: monitoring/templates/crds/record.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/name: node-exporter
+    app.kubernetes.io/part-of: kube-prometheus
+    prometheus: k8s
+    role: alert-record
+  name: record
+  namespace: monitoring
+spec:
+  groups:
+  - name: k8s.recording.dashboad
+    rules:
+      - expr: >-
+          avg_over_time(code_verb:apiserver_request_total:increase1h[30d]) * 24 * 30
+        record: code_verb:apiserver_request_total:increase30d
+
+      - expr: >-
+          sum by (cluster, code) (code_verb:apiserver_request_total:increase30d{verb=~"LIST|GET"})
+        record: code:apiserver_request_total:increase30d
+        labels:
+            verb: read
+
+      - expr: >-
+          sum by (cluster, code) (code_verb:apiserver_request_total:increase30d{verb=~"POST|PUT|PATCH|DELETE"})
+        record: code:apiserver_request_total:increase30d
+        labels:
+          verb: write
+
+      - expr: >-
+          sum by (cluster, verb, scope) (increase(apiserver_request_slo_duration_seconds_count[1h]))
+        record: cluster_verb_scope:apiserver_request_slo_duration_seconds_count:increase1h
+          
+      - expr: >-
+          sum by (cluster, verb, scope) (avg_over_time(cluster_verb_scope:apiserver_request_slo_duration_seconds_count:increase1h[30d]) * 24 * 30)
+        record: cluster_verb_scope:apiserver_request_slo_duration_seconds_count:increase30d
+        
+      - expr: >-
+          sum by (cluster, verb, scope, le) (increase(apiserver_request_slo_duration_seconds_bucket[1h]))
+        record: cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase1h
+        
+      - expr: >-
+          sum by (cluster, verb, scope, le) (avg_over_time(cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase1h[30d]) * 24 * 30)
+        record: cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d
+        
+      - expr: >-
+          1 - ((sum by (cluster) (cluster_verb_scope:apiserver_request_slo_duration_seconds_count:increase30d{verb=~"POST|PUT|PATCH|DELETE"}) - sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{le="1",verb=~"POST|PUT|PATCH|DELETE"})) + (sum by (cluster) (cluster_verb_scope:apiserver_request_slo_duration_seconds_count:increase30d{verb=~"LIST|GET"}) - ((sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{le="1",scope=~"resource|",verb=~"LIST|GET"}) or vector(0)) + sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{le="5",scope="namespace",verb=~"LIST|GET"}) + sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{le="30",scope="cluster",verb=~"LIST|GET"}))) + sum by (cluster) (code:apiserver_request_total:increase30d{code=~"5.."} or vector(0))) / sum by (cluster) (code:apiserver_request_total:increase30d)
+        record: apiserver_request:availability30d
+        labels:
+          verb: all
+
+      - expr: >-
+          1 - (sum by (cluster) (cluster_verb_scope:apiserver_request_slo_duration_seconds_count:increase30d{verb=~"LIST|GET"}) - ((sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{le="1",scope=~"resource|",verb=~"LIST|GET"}) or vector(0)) + sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{le="5",scope="namespace",verb=~"LIST|GET"}) + sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{le="30",scope="cluster",verb=~"LIST|GET"})) + sum by (cluster) (code:apiserver_request_total:increase30d{code=~"5..",verb="read"} or vector(0))) / sum by (cluster) (code:apiserver_request_total:increase30d{verb="read"})
+        record: apiserver_request:availability30d
+        labels:
+          verb: read
+
+      - expr: >-
+          1 - ((sum by (cluster) (cluster_verb_scope:apiserver_request_slo_duration_seconds_count:increase30d{verb=~"POST|PUT|PATCH|DELETE"}) - sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{le="1",verb=~"POST|PUT|PATCH|DELETE"})) + sum by (cluster) (code:apiserver_request_total:increase30d{code=~"5..",verb="write"} or vector(0))) / sum by (cluster) (code:apiserver_request_total:increase30d{verb="write"})
+        record: apiserver_request:availability30d
+        labels:
+          verb: write
+
+      - expr: >-
+          sum by (cluster, code, resource) (rate(apiserver_request_total{job="apiserver",verb=~"LIST|GET"}[5m]))
+        record: code_resource:apiserver_request_total:rate5m
+        labels:
+          verb: read
+
+      - expr: >-
+          sum by (cluster, code, resource) (rate(apiserver_request_total{job="apiserver",verb=~"POST|PUT|PATCH|DELETE"}[5m]))
+        record: code_resource:apiserver_request_total:rate5m
+        labels:
+          verb: write
+
+      - expr: >-
+          sum by (cluster, code, verb) (increase(apiserver_request_total{code=~"2..",job="apiserver",verb=~"LIST|GET|POST|PUT|PATCH|DELETE"}[1h]))
+        record: code_verb:apiserver_request_total:increase1h
+
+      - expr: >-
+          sum by (cluster, code, verb) (increase(apiserver_request_total{code=~"3..",job="apiserver",verb=~"LIST|GET|POST|PUT|PATCH|DELETE"}[1h]))
+        record: code_verb:apiserver_request_total:increase1h
+
+      - expr: >-
+          sum by (cluster, code, verb) (increase(apiserver_request_total{code=~"4..",job="apiserver",verb=~"LIST|GET|POST|PUT|PATCH|DELETE"}[1h]))
+        record: code_verb:apiserver_request_total:increase1h
+
+      - expr: >-
+          sum by (cluster, code, verb) (increase(apiserver_request_total{code=~"5..",job="apiserver",verb=~"LIST|GET|POST|PUT|PATCH|DELETE"}[1h]))
+        record: code_verb:apiserver_request_total:increase1h
+
+      - expr: >-
+          histogram_quantile(0.99, sum by (cluster, le, resource) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",subresource!~"proxy|attach|log|exec|portforward",verb=~"LIST|GET"}[5m]))) > 0
+        record: cluster_quantile:apiserver_request_slo_duration_seconds:histogram_quantile
+        labels:
+          quantile: "0.99"
+          verb: read
+
+      - expr: >-
+          histogram_quantile(0.99, sum by (cluster, le, resource) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",subresource!~"proxy|attach|log|exec|portforward",verb=~"POST|PUT|PATCH|DELETE"}[5m]))) > 0
+        record: cluster_quantile:apiserver_request_slo_duration_seconds:histogram_quantile
+        labels:
+          quantile: "0.99"
+          verb: write
+
+      - expr: >-
+          topk by (cluster, namespace, pod) (1, max by (cluster, node, namespace, pod) (label_replace(kube_pod_info{job="kube-state-metrics",node!=""}, "pod", "$1", "pod", "(.*)")))
+        record: node_namespace_pod:kube_pod_info
+  
+      - expr: >-
+          count by (cluster, node) (node_cpu_seconds_total{job="node-exporter",mode="idle"} * on (namespace, pod) group_left (node) topk by (namespace, pod) (1, node_namespace_pod:kube_pod_info:))
+        record: node:node_num_cpu:sum
+  
+      - expr: >-
+          sum by (cluster) (node_memory_MemAvailable_bytes{job="node-exporter"} or (node_memory_Buffers_bytes{job="node-exporter"} + node_memory_Cached_bytes{job="node-exporter"} + node_memory_MemFree_bytes{job="node-exporter"} + node_memory_Slab_bytes{job="node-exporter"}))
+        record: :node_memory_MemAvailable_bytes:sum
+
+      - expr: >-
+          avg by (cluster, node) (sum without (mode) (rate(node_cpu_seconds_total{job="node-exporter",mode!="idle",mode!="iowait",mode!="steal"}[5m])))
+        record: node:node_cpu_utilization:ratio_rate5m
+
+      - expr: >-
+          avg by (cluster) (node:node_cpu_utilization:ratio_rate5m)
+        record: cluster:node_cpu:ratio_rate5m
+
+  - name: sd_agent_recording_rules
+    rules:
+      - record: sd_agent_node_memory_usage_percent
+        expr: (node_memory_MemTotal_bytes{job=~"node-exporter"} - (node_memory_MemFree_bytes{job=~"node-exporter"} + node_memory_Buffers_bytes{job=~"node-exporter"} + node_memory_Cached_bytes{job=~"node-exporter"}))/ node_memory_MemTotal_bytes{job=~"node-exporter"} * 100
+
+      - record: sd_agent_node_disk_usage_5m
+        expr: rate(node_disk_io_time_seconds_total{job=~"node-exporter", device!~"(dm.+|.p[0-9])", device=~"([a-z]+|cciss.*)"}[5m])
+
+      - record: sd_agent_node_disk_io_await_5m
+        expr: (rate(node_disk_read_time_seconds_total{job=~"node-exporter"}[5m]) + rate(node_disk_write_time_seconds_total{job=~"node-exporter"}[5m])) / (rate(node_disk_reads_completed_total{job=~"node-exporter"}[5m]) + rate(node_disk_writes_completed_total{job=~"node-exporter"}[5m]))
+
+      - record: sd_agent_node_storage_usage_percent
+        expr: (1 - node_filesystem_avail_bytes{device!~"(rootfs|tmpfs)", fstype!~"(iso|tmpfs).*", job=~"node-exporter"} / node_filesystem_size_bytes{device!~"(rootfs|tmpfs)", fstype!~"(iso|tmpfs).*", job=~"node-exporter"}) * 100
+
+      - record: sd_agent_high_cpu_load_15m
+        expr: node_load15{job=~"node-exporter"} / (count without (cpu, mode) (node_cpu_seconds_total{mode="system",job=~"node-exporter"})) >= bool 2
+      
+      - record: sd_agent_node_swap_usage_percent
+        expr: ((node_memory_SwapTotal_bytes{job=~"node-exporter"} - node_memory_SwapFree_bytes{job=~"node-exporter"}) / node_memory_SwapTotal_bytes{job=~"node-exporter"}) * 100
+
+  - name: TCPSockStatRecordRules
+    interval: 1m
+    rules:
+      - record: node_sockstat_TCP_tw_rate5m
+        expr: rate(node_sockstat_TCP_tw[5m])
+      - record: node_sockstat_TCP_tw_rate1d
+        expr: rate(node_sockstat_TCP_tw[1d])
+      - record: node_sockstat_TCP_tw_rate1w
+        expr: rate(node_sockstat_TCP_tw[1w])
+      - record: node_sockstat_TCP_tw_avg1w
+        expr: avg_over_time(node_sockstat_TCP_tw[1w])
+      - record: node_sockstat_TCP_tw_stddev1w
+        expr: stddev_over_time(node_sockstat_TCP_tw_rate5m[1w])
+      - record: node_sockstat_TCP_total
+        expr: (node_sockstat_TCP_alloc{job=~".*sd_agent.*"} + node_sockstat_TCP_tw{job=~".*sd_agent.*"})
+      - record: node_sockstat_TCP_total_avg_1w
+        expr: avg_over_time(node_sockstat_TCP_total[1w])
+
+  - name: kube-prometheus-node-recording
+    rules:
+      - expr: sum(rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal"}[3m])) BY (instance)
+        record: instance:node_cpu:rate:sum
+      - expr: sum(rate(node_network_receive_bytes_total[3m])) BY (instance)
+        record: instance:node_network_receive_bytes:rate:sum
+      - expr: sum(rate(node_network_transmit_bytes_total[3m])) BY (instance)
+        record: instance:node_network_transmit_bytes:rate:sum
+      - expr: sum(rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal"}[5m])) WITHOUT (cpu, mode) / ON(instance) GROUP_LEFT() count(sum(node_cpu_seconds_total) BY (instance, cpu)) BY (instance)
+        record: instance:node_cpu:ratio
+      - expr: sum(rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal"}[5m]))
+        record: cluster:node_cpu:sum_rate5m
+      - expr: cluster:node_cpu:sum_rate5m / count(sum(node_cpu_seconds_total) BY (instance, cpu))
+        record: cluster:node_cpu:ratio
+
+  - name: node-exporter.recording
+    rules:
+      - expr: count without (cpu, mode) (node_cpu_seconds_total{job="node-exporter",mode="idle"})
+        record: instance:node_num_cpu:sum
+      - expr: 1 - avg without (cpu) (sum without (mode) (rate(node_cpu_seconds_total{job="node-exporter", mode=~"idle|iowait|steal"}[5m])))
+        record: instance:node_cpu_utilisation:rate5m
+      - expr: (node_load1{job="node-exporter"}/instance:node_num_cpu:sum{job="node-exporter"})
+        record: instance:node_load1_per_cpu:ratio
+      - expr: 1 - ( (node_memory_MemAvailable_bytes{job="node-exporter"} or ( node_memory_Buffers_bytes{job="node-exporter"} + node_memory_Cached_bytes{job="node-exporter"} + node_memory_MemFree_bytes{job="node-exporter"} + node_memory_Slab_bytes{job="node-exporter"} ) ) / node_memory_MemTotal_bytes{job="node-exporter"})
+        record: instance:node_memory_utilisation:ratio
+      - expr:  rate(node_vmstat_pgmajfault{job="node-exporter"}[5m])
+        record: instance:node_vmstat_pgmajfault:rate5m
+      - expr: rate(node_disk_io_time_seconds_total{job="node-exporter", device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}[5m])
+        record: instance_device:node_disk_io_time_seconds:rate5m
+      - expr: rate(node_disk_io_time_weighted_seconds_total{job="node-exporter", device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}[5m])
+        record: instance_device:node_disk_io_time_weighted_seconds:rate5m
+      - expr:  sum without (device) ( rate(node_network_receive_bytes_total{job="node-exporter", device!="lo"}[5m]))
+        record: instance:node_network_receive_bytes_excluding_lo:rate5m
+      - expr: sum without (device) ( rate(node_network_transmit_bytes_total{job="node-exporter", device!="lo"}[5m]))
+        record: instance:node_network_transmit_bytes_excluding_lo:rate5m
+      - expr: sum without (device) (rate(node_network_receive_drop_total{job="node-exporter", device!="lo"}[5m]))
+        record: instance:node_network_receive_drop_excluding_lo:rate5m
+      - expr: sum without (device) (rate(node_network_transmit_drop_total{job="node-exporter", device!="lo"}[5m]))
+        record: instance:node_network_transmit_drop_excluding_lo:rate5m
