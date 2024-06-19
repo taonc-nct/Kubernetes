@@ -35,3 +35,4 @@ spec:
             name: nginx-deploy-green
             port:
               number: 80
+
