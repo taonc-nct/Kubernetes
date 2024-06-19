@@ -11,6 +11,7 @@ Số lượng Port sử dụng cho NodePort hạn chế (mặc định range Nod
 - Các service ứng dụng sẽ được expose dưới dạng ClusterIP và sau đó được expose ra bên ngoài qua Ingress --> Service thực sự trong suốt với người dùng. Người dùng chỉ thực sự kết nối tới Ingress Controller
 Có thể dùng thêm external LoadBalancer bên ngoài để trỏ tới IngressController --> Có thể sử dụng port http/https để kết nối tới domain tương ứng của service thay vì phải chỉ định thêm NodePort, nhìn nó chuyên nghiệp hơn hẳn
 Không bị hạn chế bởi số lượng Port mà NodePort có thể cung cấp.
+- Không chỉ vậy Ingress giúp tiết kiệm chi phí khi muốn expose service ra bên ngoài trên môi trường cloud.
 ## 2. Cơ chế hoạt động của Kubernetes Ingress.
 
 #### Cơ chế hoạt động của Ingress gồm 2 thành phần chính:
