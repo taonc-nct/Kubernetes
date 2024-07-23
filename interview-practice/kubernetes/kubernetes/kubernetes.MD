@@ -8,11 +8,15 @@
         - Tổng quát: 
             1. Các Pod của Deployment là hoàn toàn giống nhau (Identical) và có thể thay thế lẫn nhau về chức năng. Nghĩa là một Pod bị lỗi thì hoàn toàn có thể thay thế bằng một Pod mới để tiếp tục xử lý.
             2. Deployment trước tiên sẽ sinh ra các Replicaset, sau đó ReplicaSet mới tạo ra các Pod theo thứ tự ngẫu nhiên. Tên Pod cũng theo format tên của Replicaset + mã hash random gán vào đuôi mỗi Pod.
+
             ![alt text](../img/4.webp)
+
             3. Các Pod của Deployment cũng có thể bị xóa theo thứ tự bất kỳ, hoặc xóa đồng thời nhiều Pod (trong trường hợp scale down deployment)
         - PVC: 
             1. Các pod của Deployment có stogare chung (cùng một vùng lưu trữ(pvc)).
+
                 ![alt text](../img/1.webp)
+
         - Note: 
             - Deployment thích hợp triển khai các stateless app
     - Statefulset: 
@@ -23,9 +27,13 @@
             4. Khi một Pod bị lỗi nó sẽ được thay thế bằng một Pod mới cùng định danh (ví dụ pod-1 bị lỗi sẽ được thay bằng Pod mới nhưng tên vẫn là pod-1).
         - PVC: 
             1. Các pod của StatefulSet có stogare riêng (vùng lưu trữ khác nhau(pvc)). Nghĩa là có bao nhiêu pod sẽ có bấy nhiêu pvc tương ứng
+
             ![alt text](../img/2.webp)
+
             2. Điều gì xảy ra khi ta xóa một pod -> statefulSet sẽ tạo ra một pod y nguyên cái pod xóa đi (stable network identity, stable indentity) đảm bảo không cần tạo ra một pvc mới(đảm bảo tính toàn vẹn dữ liệu):
+
             ![alt text](../img/3.webp)
+            
         - Node: 
             1. Statefulset theo đúng tên của nó thích hợp triển khai các stateful app
     - Deamonset: 
@@ -46,6 +54,7 @@
     - Example: 
         - Command line app, nó không cần phải lưu trữ dữ liệu gì cả, tất cả những gì nó cần là xuất ra kết quả và không cần phải lưu lại kết quả đó. Những đặc tính của stateless app sẽ giúp nó dễ dàng scale hơn.
         - Ta có một trang web nodejs. Mỗi khi có request tới, nó thực hiện các nghiệp vụ của nó và lưu trạng thái vào Database(chứ bản thân cái app nó không lưu thông tin). Khi có yêu cầu sửa/xóa dữ liệu thì nó đơn giản là forward yêu cầu đó để xử lý trên database, bản thân nó không lưu dữ liệu. Bản thân nó không quan tâm tới các xử lý trước đó của nó ==> Đây là stateless app.   
+
 2.  **- Question:** Quy trình tạo ra pod trong kubernetes?
 
     **- Answer:** 
@@ -94,14 +103,19 @@ Controller định kỳ sẽ gọi api-server để biết trạng thái hiện 
 5.  **- Questions**: Kubernetes là gì?
 
     **- Answer:** 
-        - Kubernetes là gì? Đây là một nền tảng mã nguồn mở, giúp bạn có thể tự động hóa việc quản lý và triển khai ứng dụng dưới dạng container (Container orchestration engine) một cách dễ dàng. Khái niệm container được đề cập ở phần Docker
+        - Kubernetes là gì? Đây là một nền tảng mã nguồn mở, giúp bạn có thể tự động hóa việc quản lý và triển khai ứng dụng dưới dạng container (Container orchestration engine) một cách dễ dàng ( Hoặc có thể trả lờiKubernetes là một nền tảng nguồn mở, khả chuyển, có thể mở rộng để quản lý các ứng dụng được đóng gói và các service, giúp thuận lợi trong việc cấu hình và tự động hoá việc triển khai ứng dụng. Kubernetes là một hệ sinh thái lớn và phát triển nhanh chóng. Các dịch vụ, sự hỗ trợ và công cụ có sẵn rộng rãi.). Khái niệm container được đề cập ở phần Docker
+        - Một số điểm khác biệt giữa Kubernetes và Docker Swarm:
+            1. Kubernetes có thể quản lý các container của nhiều nhà cung cấp khác nhau, trong khi Docker Swarm chỉ quản lý các container của Docker.
+            2. Kubernetes có thể tự động phân phối tải cho các container, trong khi Docker Swarm cần một công cụ bên ngoài để phân phối tải.
+            3. Kubernetes có thể tự động khôi phục các container bị lỗi, trong khi Docker Swarm không có tính năng này(Kubernetes khởi động lại các containers bị lỗi, thay thế các container, xoá các container không phản hồi lại cấu hình health check do người dùng xác định và không cho các client biết đến chúng cho đến khi chúng sẵn sàng hoạt động. )
+            4. Kubernetes có tính năng auto-scale
 
 6.  **- Question:** Các thành phần chính trong kubernetes? 
 
     **- Answer:** 
     - Kubernetes gồm 2 thành phần chính: 
         + Control Plane Components:
-            1. kube-api-server
+            1. kube-api-server: 
             2. etcd: Là một cơ sở dữ liệu dạng key-value có tính khả dụng và đồng nhất cao. Etcd là nơi K8S lưu trữ toàn bộ các thông tin cấu hình của hệ thống
             3. kube-scheduler:  Đây là service mặc định của K8S làm nhiệm vụ phân phối Pod sẽ được chạy trên node nào. Mỗi Container bên trong Pod có thể có những yêu cầu khác nhau, hoặc ngay các Pod cũng có yêu cầu khác nhau. Do đó nhiệm vụ của Scheduler là tìm kiếm các node thỏa mãn các điều kiện trên và lựa chọn node tối ưu nhất để chạy. Tron trường hợp không có node nào thỏa mãn các điều kiện đặt ra thì Pod sẽ ở trạng thái chưa được lên lịch thực hiện cho tới khi Scheduler tìm được node phù hợp.
             4. kube-controler-manager
@@ -122,11 +136,14 @@ Controller định kỳ sẽ gọi api-server để biết trạng thái hiện 
             + Giả sử ta có một Service (type: clusterIP) **SVC01**. Khi **SVC01** được tạo API server sẽ kiểm tra các Pod nào sẽ được liên kết với Service **SVC01** thông qua trường "label(của pod)" và "label selector(của **SVC01**)"
             + Giả sử ta có thêm 2 pod lần lượt là: Pod01 và Pod02. API server tạo ra một ababstraction gọi là endpoint (enpoint sẽ đại diện cho IP của các pod)-> HIện tại **SVC01** có hai enpoint của hai pod Pod01 và Pod02 ta tạm gọi nó sẽ là **EP01** và **EP02**
 ![alt text](../img/9.png)
-            ![alt text](../img/10.png)
-            ![alt text](../img/11.png)
+![alt text](../img/10.png)
+![alt text](../img/11.png)
+
             + Muốn ánh xạ(mapping) implemented network khi truy cập đến IP của SVC01 có thể được chuyển tiếp(redirect) đến **EP01** hoặc **EP02**.Để đạt được điều đó,  API server quảng thông tin ánh xạ mới tới kube-proxy trên mỗi node, sau đó áp dụng ánh xạ đó làm internal rules(rule nội bộ).
+
 ![alt text](../img/12.png)
 ![alt text](../img/13.png)
+
             - Hiện tại lưu lượng truy cập(traffic destined ) IP SVC01 sẽ tuân rule DNAT. Rule DNat này sẽ chuyển tiếp traffic đến Pod. Hãy nhớ rằng **EP01** và **EP02** về cơ bản là IP của Pod.
     - kube-proxy Mode:
         + User-space mode
