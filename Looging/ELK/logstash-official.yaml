@@ -1,0 +1,330 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: release-name-logstash-env
+  namespace: bu-order
+  labels:
+    app: release-name-logstash
+    chart: logstash
+    heritage: Helm
+    release: release-name
+data:
+  ELASTICSEARCH_PASSWORD: TEVJRnhTV0JIUGp6YkdGZQ==
+type: Opaque
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: release-name-logstash-tls
+  namespace: bu-order
+  labels:
+    app: release-name-logstash
+    chart: logstash
+    heritage: Helm
+    release: release-name
+data:
+  ca.crt: >-
+    LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURJakNDQWdxZ0F3SUJBZ0lSQUx1MjlnRWFvWlFTT3NvRllDUWdQNll3RFFZSktvWklodmNOQVFFTEJRQXcKR3pFWk1CY0dBMVVFQXhNUVpXeGhjM1JwWTNObFlYSmphQzFqWVRBZUZ3MHlNekEzTURZd016TTRNamxhRncweQpOREEzTURVd016TTRNamxhTUJzeEdUQVhCZ05WQkFNVEVHVnNZWE4wYVdOelpXRnlZMmd0WTJFd2dnRWlNQTBHCkNTcUdTSWIzRFFFQkFRVUFBNElCRHdBd2dnRUtBb0lCQVFEZjJSeDZ6ODNaaitva0ordm9sWFRaV09NRDQxRFMKS2trcjFQejF4UW0xa1E3SjRiMUtIaldNdGtFVlpaRkdBVGFNNTI3ZFNJcndsUmRMM3ZvMHI2Mng4YTRhRldKawo2eDgyb2UzVUliMXUzbkg1RDhldDREaUxtbjJHYWNEWHpHbEhxczVjR3owR2RhcGluM2x3RDFJcFFHdVRnTVJMCmxXdkcxMytXZ1FLY2lBUWlqVGdzeFVzeDdtM1VNTjdxSU5UWmorclNzU284amlBQ1dueHk1V1Z1aEZBU1l1eHoKQXNTTXhDWmNxMC9rQm1sUmRXVnVSemNrWW1qZHZwNHdXNnBuc0d1czY2bXBFSWhlcXd1WEgrUVZER0o5b2N6UgoxbzF6WUxEL3FaS3hzaDRPS09Yc1B6MHhxRmVDcGtyaithQmxkUDdWK29CTjB6NnN6blByZjh6TkFnTUJBQUdqCllUQmZNQTRHQTFVZER3RUIvd1FFQXdJQ3BEQWRCZ05WSFNVRUZqQVVCZ2dyQmdFRkJRY0RBUVlJS3dZQkJRVUgKQXdJd0R3WURWUjBUQVFIL0JBVXdBd0VCL3pBZEJnTlZIUTRFRmdRVUw1OHZvNmZUbUlmY29IZXNsUjFKbmdaVQpacGN3RFFZSktvWklodmNOQVFFTEJRQURnZ0VCQUhLUE9rREpLUWlScHBScEI2Q1dwTlNUcDl6bjV6S3IwM1AyCjgvYStJMTMwQWorMnVOYmQ5UEs2OUNPNThTS0NFY084TkhwTkxTSndsR2FpTzhsbWtLZVpaQkhUNzYyV2xTOEEKQjVjVXFMZlVMZVRvVWcwQXlpMUVhc1JNZE1rd2dYQXNYSVdybkFscW42L2FYY0FNSXA0allJU2pUYkIxa2ZDWApXZWN0V25zRXBYZ2xyNERDaVlHaTY5b21KNTdjaWtwb0VBWmQxdVZFL3JFaXFwRW14NEF3VlUvUUYzako3bGVZCnYvak1XRjhHN0p5dUd5SURBV0RJWDRGL3g5aS9oSSttV21BQ211OEFFbXZ0SEJZYlNMRWxNWXI3bkwrYzNER0YKSnYrNHZYOUZkb09xdkFsWVBTd1pOSjN3YnducHpiTS9yWGM3T3VxQ0V4VlpCbDZUMmh3PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+  tls.crt: >-
+    LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURpRENDQW5DZ0F3SUJBZ0lSQUxqeFRMeUpOdVVxT3Y2RjlwOXA1a013RFFZSktvWklodmNOQVFFTEJRQXcKR3pFWk1CY0dBMVVFQXhNUVpXeGhjM1JwWTNObFlYSmphQzFqWVRBZUZ3MHlNekEzTURZd016TTRNamxhRncweQpOREEzTURVd016TTRNamxhTUI4eEhUQWJCZ05WQkFNVEZHVnNZWE4wYVdOelpXRnlZMmd0YldGemRHVnlNSUlCCklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUE0VFNRZzNxTmcwbW9vd1IzSHlGVHhiSFgKMllFYmVmT1JMVlBRbWRmNVFlNWZoMGxXdGZzajJ2djZqUGlEMFhZT1RPVnpHQVVzcm5DZTk1N01VMkJjNWVBZwpyK1B6T1Y3T3FtdWF3U09VcFhQSWVzSUVXaHNVa3RhWC9GdkJCRVcvaU9wL2hkS2p5cDc0Mk1QQ0REWVBmZVFhCldFQ2E1cnk2RzBnU2NBaGtONXdaVEY0WWlMbWdwdUZreXNDSHg4WTFlK20wK2ZCTTMvSjR1NXpGWnhiS2R5bTkKbm9mWWhBZWxrZnNaMXFoNmxjS2U0cEF2MmFhczNnR3FIOFg3MkdBSk13T3FmSFJnZy9yVzZpbEpZbWRBakxOTApPSkJMcHN6K3dOSndHeTloWnZ3MkdaK2E5elVjSzZBNTBNSUtFNUcvZXdIejlhOThCLzFUMkZzQ2NybHdXUUlECkFRQUJvNEhDTUlHL01BNEdBMVVkRHdFQi93UUVBd0lGb0RBZEJnTlZIU1VFRmpBVUJnZ3JCZ0VGQlFjREFRWUkKS3dZQkJRVUhBd0l3REFZRFZSMFRBUUgvQkFJd0FEQWZCZ05WSFNNRUdEQVdnQlF2bnkranA5T1loOXlnZDZ5VgpIVW1lQmxSbWx6QmZCZ05WSFJFRVdEQldnaFJsYkdGemRHbGpjMlZoY21Ob0xXMWhjM1JsY29JY1pXeGhjM1JwClkzTmxZWEpqYUMxdFlYTjBaWEl1WkdWbVlYVnNkSUlnWld4aGMzUnBZM05sWVhKamFDMXRZWE4wWlhJdVpHVm0KWVhWc2RDNXpkbU13RFFZSktvWklodmNOQVFFTEJRQURnZ0VCQUVNVFpQQm9WNHhHYWgyVmRCNU9QTmRkdjNVcgpVTkovNWVwTkp6WklvNDlxL3ZSYU9lWGsxL2dHYjBNT0FuS0o2MVJGUDNPZ0xaMFUwRll1eXEzU3czc3BocjAzCkl0U21hNWFmVlF6MGtLT2c0VnZBV2pZcjRkQzR5T3NpRW1UY1ZqM2l4UDZ0amlLdVRxUkdDZE5qaTFuQWRqVDUKSEtIUHhmTHh2dFdVd2ozaEZVOGcxSzNDdmVueVZRVkUxeGRmVkRGVGd6ZWg1cXBsQUFBemxKVk45R20ybElYcgo5TEhwU1cwYXQvOTFwUjVmT3RER05KYnUvWVFSL3BrK3oyNmVjMGdmWi9zMXdFdTJNayt5Q29mMjVOUnlEUXNxCmVmQUtUS1loNzkrblEzU0taeC9TYktRR0lBQ1FpNVdoMmZVMXhSNW1paGJPdDdGTW5iOWZkQzlaeDRvPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+  tls.key: >-
+    LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFb3dJQkFBS0NBUUVBNFRTUWczcU5nMG1vb3dSM0h5RlR4YkhYMllFYmVmT1JMVlBRbWRmNVFlNWZoMGxXCnRmc2oydnY2alBpRDBYWU9UT1Z6R0FVc3JuQ2U5NTdNVTJCYzVlQWdyK1B6T1Y3T3FtdWF3U09VcFhQSWVzSUUKV2hzVWt0YVgvRnZCQkVXL2lPcC9oZEtqeXA3NDJNUENERFlQZmVRYVdFQ2E1cnk2RzBnU2NBaGtONXdaVEY0WQppTG1ncHVGa3lzQ0h4OFkxZSttMCtmQk0zL0o0dTV6Rlp4YktkeW05bm9mWWhBZWxrZnNaMXFoNmxjS2U0cEF2CjJhYXMzZ0dxSDhYNzJHQUpNd09xZkhSZ2cvclc2aWxKWW1kQWpMTkxPSkJMcHN6K3dOSndHeTloWnZ3MkdaK2EKOXpVY0s2QTUwTUlLRTVHL2V3SHo5YTk4Qi8xVDJGc0Njcmx3V1FJREFRQUJBb0lCQUhraUgvVklqeU9tRkJvVApSY3V0em5TUTgweGY0SnFaQTJiQkpYd0txbHpuVGVUajhzc1IyYmhwUHR4aXMreVB0cU52NjVkbytSNmZIektMCjdOV1FDSWZ4SlVQV3RiWVBJOVNRNm4ybW1NYmgzMTBBVFB6MmdmdDFoK3pLb2FpZHA2ZUtrcXMxb0xwVkJmNzYKVkw3aXVUUjY1QnpDSzArZkJlKzB0WTRqUlZ5UERLMm5CclZ3MHI4emhoeU4rVEoySnVsb0QxZkpiSFJmYzlNdwpZTzZDSUZKR3lBMjJjSE5PSFA5Zkl0aFd1blNvRzNHL3BjNUNoZFRhYXZOaXE1VEtTazFZMzBaSUo1UEZYTHZSCkNUZis0UllBQjEwYlZKYTlVSGN1RkV1aEh5MEpoLzl5V1Rwc1l3WjdiSkwzNGZIZ1kxc1VWd1BSQUJQazU4SXUKZ2xEdjYyMENnWUVBNkRPLzBCWExnYVkxcW5zc2J6cnNqYURVU3llbDlGeUp1VkRzci9uYlpHNFlvdXBVbTYzOApody9jV0JweVBTZ0NqUXh4T1BWNlJtSzlsQzVaRUEzQWZiS3NnaTZoVDBrT0k4b2haS2MwQjFXamFNNzZvOEtHCmdPeVFpak1KVFBqdEhlL3BCb0Y2MFJvU0R6RjBGQjdrYWphd29DUlJJUytlZ3Z3SEluOEhGMU1DZ1lFQStFazkKcTlmbVptZUp1VTdmbWxSMDU0YlpldTZzUFJCTDcrYmV2RGYwd01uTU9FczIwUlRVRCt3WXRvcHJCQkdyTHM1dgoxdTVXa0dPVEtIU3pLVTVwVVQ4ZUNTSXM3a3lzZ3o1OWZYZy94YUYxdElXR1J0VHlEMFFHcTl5MUx0ZG1QWmV1CnFNSm5wV1dYSHRGL1lYVys3MXBhZWlPdHBQYkt1R0VPbU5aUndDTUNnWUFaU2xtZjdsL0Y5VFp2SlE5SDVpRVIKbyt5N2Fzd1dlMlc4dTJXc0hRaWFQYXVOUXZ5SUlFRWE3TTFSQTBCaUROT0tUVXFmcTR6djBaMVlZRnZ1OWJCNwpnRlJ0c1dwOFdqYWlDMGZyMEpKSUlqbTBGcWNSNHdRSFVyekRjSitZdEp3TzRLeCt1dWVIa3RGWXVrZ3NVTmtNCkFIem9WRXhKMHdmdXVFaUdwMU04WlFLQmdRRGxxSG1QRm1sYmw3SGc0b0FaOUwwZDI3SVc3K1lKcGFWWUJxbEkKV0VuZ2VjaVkyWm1lMURGRGVSTnk1WjRQYVhoNkZ5R0VJWG1ZblVKbFRXemJiRmdtZXNlQmswY1VOWC9zOWtTRgpabEUyc1I1N0dIY1gxYWtCVGQ4TjRWMEdNdCt6WVRhQml6RHI0SWhrVFV3U0RpUEtxankrZFhvTStPcVNtZFF5CnN5dHpHUUtCZ0crOCt0YWNlb0h5SjM0QlBCQWp0d3Y0eTlUK3hvNDVlNjhpdE9WOElNWWJFVjI5TXM4ZTRKWEkKMHNwU1JQZlpZZnI5eUF0QThxd3JzWG9TYWIyWmQwVDZHMnNQY2Q5VVhwYVV4YVRnWWNSZlhwOERMNXVmTUN1dApneGFDcDVPT1BNeUFvZG0wL0g3OXVucHJYOHlWMkNsVTJ4RFZWODFuTCtZd0FKYncyczJBCi0tLS0tRU5EIFJTQSBQUklWQVRFIEtFWS0tLS0tCg==
+type: Opaque
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: release-name-logstash-config
+  namespace: bu-order
+  labels:
+    app: release-name-logstash
+    chart: logstash
+    heritage: Helm
+    release: release-name
+data:
+  logstash.yml: >
+
+    http.host: "0.0.0.0"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: release-name-logstash-pattern
+  namespace: bu-order
+  labels:
+    app: release-name-logstash
+    chart: logstash
+    heritage: Helm
+    release: release-name
+data:
+  pattern.conf: |
+    METHOD [a-zA-Z0-9._-]+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: release-name-logstash-pipeline
+  namespace: bu-order
+  labels:
+    app: release-name-logstash
+    chart: logstash
+    heritage: Helm
+    release: release-name
+data:
+  logstash.conf: |
+    input {
+        udp {
+            port => 9007
+            type => "mvt-service-v1"
+            id => "mvt-service-v1"
+        }
+        udp {
+            port => 9006
+            type => "mvt-service-v2"
+            id => "mvt-service-v2"
+            }
+        udp {
+            port => 9008
+            type => "mvt-service-perf"
+            id => "mvt-service-perf"
+            }
+        beats {
+            port => 9009
+            type => "ingress"
+            id => "ingress"
+            }
+        }
+
+        filter {
+            if [type] == "mvt-service-v1" {
+                grok {
+                    match => { "message" => "%{LOGLEVEL:level} (%{WORD:traceId})? (?<msisdnId>[a-zA-Z0-9._-]*) %{JAVAFILE:class} \[(?:%{JAVAMETHOD:method})?:(?:%{INT:line})?] - %{JAVALOGMESSAGE:message_process}" }
+                }
+
+                mutate{
+                    replace => ["message", "%{message_process}"]
+                }
+
+                mutate{
+                    remove_field => ["message_process"]
+                }
+            } else if [type] == "mvt-service-v2" {
+                grok {
+                    match => { "message" => "%{LOGLEVEL:level} (%{WORD:traceId})? (?<msisdnId>[a-zA-Z0-9._-]*) %{JAVAFILE:class} \[(?:%{JAVAMETHOD:method})?:(?:%{INT:line})?] - %{JAVALOGMESSAGE:message_process}" }
+                }
+
+                mutate{
+                    replace => ["message", "%{message_process}"]
+                }
+
+                mutate{
+                    remove_field => ["message_process"]
+                }
+            } else if [type] == "mvt-service-perf" {
+                grok {
+                    match => { "message" => "%{LOGLEVEL:level} %{WORD:traceId} (?<msisdn>[a-zA-Z0-9._-]*) (?<method>[$a-zA-Z0-9._-]*) %{NUMBER:duration:int} %{WORD:result} %{WORD:log_type} %{JAVALOGMESSAGE:message_process}" }
+                }
+
+                mutate{
+                    replace => ["message", "%{message_process}"]
+                }
+
+                mutate{
+                    remove_field => ["message_process"]
+                }
+            } else if [type] == "ingress" {
+                if [stream] == "stdout" {
+                    grok {
+                        match => { "message" => ["%{IPORHOST:remote_ip} - \[%{HTTPDATE:time}\] \"%{WORD:method} %{DATA:url} HTTP/%{NUMBER:http_version}\" %{NUMBER:response_code} %{NUMBER:body_sent_bytes} \"%{DATA:referrer}\" \"%{DATA:agent}\" %{NUMBER:request_length} %{NUMBER:duration:float} \[%{DATA:proxy_upstream_name}\] \[%{DATA:proxy_alternative_upstream_name}\] %{NOTSPACE:upstream_addr} %{NUMBER:upstream_response_length} %{NUMBER:upstream_response_time} %{NUMBER:upstream_response_code} %{NOTSPACE:req_id} %{NOTSPACE:device_id}"] }
+                        remove_field => ["message"]
+                        }
+                    grok {
+                        match => [ "[url]", "%{URIPATH:uri_path}(%{URIPARAM:uri_param})?" ]
+                        remove_field => ["[url]","uri_param", "[kubernetes][container][name]"]
+                    }
+                    mutate {
+                        add_field => { "read_timestamp" => "%{@timestamp}" }
+                        remove_field => ["[user_name]"]
+                        remove_field => ["[http_version]"]
+                        remove_field => ["[agent]"]
+                        remove_field => ["[referrer]"]
+                        remove_field => ["[proxy_alternative_upstream_name]"]
+                        remove_field => ["[proxy_upstream_name]"]
+                    }
+                    date {
+                        match => [ "[time]", "dd/MMM/YYYY:H:m:s Z" ]
+                        remove_field => "[time]"
+                    }
+                }
+            }
+        }
+
+    output {
+        if [type] == "mvt-service-v1"{
+                elasticsearch {
+                hosts => "https://elasticsearch-master:9200"
+                user => "elastic"
+                password => "LEIFxSWBHPjzbGFe"
+                cacert => "/usr/share/logstash/crt/ca.crt"
+                index => "mvt-service-v1-%{+YYYY.MM.dd}"
+            }
+        } else if [type] == "mvt-service-v2"  {
+                elasticsearch {
+                hosts => "https://elasticsearch-master:9200"
+                user => "elastic"
+                password => "LEIFxSWBHPjzbGFe"
+                cacert => "/usr/share/logstash/crt/ca.crt"
+                index => "mvt-service-v2-%{+YYYY.MM.dd}"
+            }
+        } else if [type] == "mvt-service-perf" {
+                elasticsearch {
+                hosts => "https://elasticsearch-master:9200"
+                user => "elastic"
+                password => "LEIFxSWBHPjzbGFe"
+                cacert => "/usr/share/logstash/crt/ca.crt"
+                index => "mvt-service-perf-%{+YYYY.MM.dd}"
+            }
+        } else if [type] == "ingress" {
+                elasticsearch {
+                hosts => "https://elasticsearch-master:9200"
+                user => "elastic"
+                password => "LEIFxSWBHPjzbGFe"
+                cacert => "/usr/share/logstash/crt/ca.crt"
+                index => "ingress-%{+YYYY.MM.dd}"
+            }
+        }
+        }
+---
+# Source: logstash/templates/service-headless.yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: "release-name-logstash-headless"
+  labels:
+    app: "release-name-logstash"
+    chart: "logstash"
+    heritage: "Helm"
+    release: "release-name"
+spec:
+  clusterIP: None
+  selector:
+    app: "release-name-logstash"
+  ports:
+    - name: http
+      port: 9600
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: release-name-logstash
+  namespace: bu-order
+  labels:
+    app: release-name-logstash
+    chart: logstash
+    heritage: Helm
+    release: release-name
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: release-name-logstash
+      release: release-name
+  template:
+    metadata:
+      name: release-name-logstash
+      creationTimestamp: null
+      labels:
+        app: release-name-logstash
+        chart: logstash
+        heritage: Helm
+        release: release-name
+    spec:
+      volumes:
+        - name: logstashconfig
+          configMap:
+            name: release-name-logstash-config
+        - name: logstashpipeline
+          configMap:
+            name: release-name-logstash-pipeline
+        - name: logstashpattern
+          configMap:
+            name: release-name-logstash-pattern
+        - name: cert
+          secret:
+            secretName: release-name-logstash-tls
+      containers:
+        - name: logstash
+          image: reg-hosted-lab.kcntt.net/logstash:8.5.1
+          ports:
+            - name: http
+              containerPort: 9600
+              protocol: TCP
+          env:
+            - name: LS_JAVA_OPTS
+              value: '-Xmx1g -Xms1g'
+          resources:
+            limits:
+              cpu: '1'
+              memory: 1536Mi
+            requests:
+              cpu: 100m
+              memory: 1536Mi
+          volumeMounts:
+            - name: logstashconfig
+              mountPath: /usr/share/logstash/config/logstash.yml
+              subPath: logstash.yml
+            - name: logstashpipeline
+              mountPath: /usr/share/logstash/pipeline/logstash.conf
+              subPath: logstash.conf
+            - name: logstashpattern
+              mountPath: /usr/share/logstash/patterns/pattern.conf
+              subPath: pattern.conf
+            - name: cert
+              mountPath: /usr/share/logstash/crt
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 300
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 3
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            runAsUser: 1000
+            runAsNonRoot: true
+      restartPolicy: Always
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 1000
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - release-name-logstash
+              topologyKey: kubernetes.io/hostname
+  serviceName: release-name-logstash-headless
+
+
+

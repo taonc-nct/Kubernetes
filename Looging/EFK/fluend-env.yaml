@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluentd-audit-cm
+  namespace: elastic
+data:
+  FLUENTD_ELASTIC_HOSTS: >-
+    http://elastic-0.elasticsearch.elastic:9200,http://elastic-1.elasticsearch.elastic:9200,http://elastic-2.elasticsearch.elastic:9200
+  FLUENTD_TAG_KEY: tag
+  FLUENT_ELASTICSEARCH_SCHEME: "http"
+  FLUENT_ELASTICSEARCH_SSL_VERIFY: "false"
+  FLUENT_ELASTICSEARCH_USER: "elastic"
+  FLUENT_ELASTICSEARCH_PASSWORD: "123456a@"
+  FLUENT_KUBERNETES_METADATA_SKIP_CONTAINER_METADATA: "true"
+  FLUENT_KUBERNETES_METADATA_SKIP_LABELS: "true"
+  FLUENT_KUBERNETES_METADATA_SKIP_MASTER_URL: "true"
+  FLUENT_KUBERNETES_METADATA_SKIP_NAMESPACE_METADATA: "true"
+  FLUENTD_APPLICATION_APP: k8s-vcontract
+binaryData: {}
+
+

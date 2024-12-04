@@ -1,0 +1,123 @@
+# Deploys a new Namespace for the MinIO Pod
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: velero # Change this value if you want a different namespace name
+  labels:
+    name: velero # Change this value to match metadata.name
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio-pvc
+  namespace: velero
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio
+  namespace: velero
+  labels:
+    app: minio
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: minio
+      labels:
+        app: minio
+    spec:
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: minio-pvc
+      containers:
+        - name: minio
+          image: minio/minio:RELEASE.2024-06-11T03-13-30Z
+          ports:
+            - name: http-console
+              containerPort: 9090
+              protocol: TCP
+            - name: minio
+              containerPort: 9000
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MINIO_ROOT_USER
+              value: "minio"
+            - name: MINIO_ROOT_PASSWORD
+              value: "minio123"
+            - name: CONSOLE_SECURE_TLS_REDIRECT
+              value: "off"           
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+            initialDelaySeconds: 120
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /minio/health/ready
+              port: 9000
+            initialDelaySeconds: 120
+            periodSeconds: 20
+          resources:
+            requests:
+              memory: "1000Mi"
+              cpu: "1000m"
+            limits:
+              memory: "1500Mi"
+              cpu: "1500m"
+          volumeMounts:
+            - mountPath: /data
+              name: data
+          command:
+            - /bin/bash
+            - -c
+          args:
+              - minio server /data --address :9000 --console-address :9090
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: minio
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-console
+  namespace: velero
+spec:
+  selector:
+    app: minio
+  ports:
+    - port: 9090
+      name: http-console
+      protocol: TCP
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+  namespace: velero
+spec:
+  selector:
+    app: minio
+  ports:
+    - name: minio
+      port: 9000
+      targetPort: 9000
+      nodePort: 32000
+      protocol: TCP
+  type: NodePort

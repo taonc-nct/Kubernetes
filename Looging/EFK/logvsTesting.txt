@@ -1,0 +1,212 @@
+Changed password for user apm_system
+PASSWORD apm_system = 5D0U04ugmBLefNm3EZ6I
+
+Changed password for user kibana_system
+PASSWORD kibana_system = pMqnBZxdhWNaeaQpzzec
+
+Changed password for user kibana
+PASSWORD kibana = pMqnBZxdhWNaeaQpzzec
+
+Changed password for user logstash_system
+PASSWORD logstash_system = fLcfX7tbwEgNDwjea65J
+
+Changed password for user beats_system
+PASSWORD beats_system = oO5krdJtZVCdecREAojA
+
+Changed password for user remote_monitoring_user
+PASSWORD remote_monitoring_user = D8THDgnTiX4vR98xPEPD
+
+Changed password for user elastic
+PASSWORD elastic = EFyq5ilhrq2n29BygfTF
+passwordchange: 123456a@
+
+
+
+    <filter kubernetes.app***>
+      @type grep
+      <or>
+        <exclude>
+          key 
+      </or>
+    </filter>
+
+
+      n_lines 10
+      #multiline_start_regexp /^Start/
+      #multiline_end_regexp /^End/
+      #continuous_line_regexp nil
+      #stream_identity_key nil
+      #flush_interval 60
+      #timeout_label nil
+      #use_first_timestamp false
+      #partial_key nil
+      #partial_value nil
+      #keep_partial_key false
+      #use_partial_metadata false
+      #keep_partial_metadata false
+      #partial\_metadata\_format docker-fluentd
+      #use\_partial\_cri\_logtag false
+      #partial\_cri\_logtag\_key nil
+      #partial\_cri\_stream\_key stream
+
+
+    <filter kubernetes.app**>
+      @type concat
+      key log
+      multiline_start_regexp /^(\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}.\d{0,3})/
+      flush_interval 1
+    </filter> 
+
+
+    <match kubernetes.system**>
+      @type elasticsearch
+      user "#{ENV['FLUENT_ELASTICSEARCH_USER']}"
+      hosts "#{ENV['FLUENTD_ELASTIC_HOSTS']}"
+      password "#{ENV['FLUENT_ELASTICSEARCH_PASSWORD']}"
+      include_tag_key true
+      tag_key "#{ENV['FLUENTD_TAG_KEY'] || 'fluentd-k8s-logs'}"
+      index_date_pattern "now/d"
+      template_name "k8s-sys"
+      template_file "/fluentd/etc/index_template.json"
+      index_name k8s-sys
+      include_timestamp true
+      suppress_type_name true
+      ssl_verify false
+      rollover_index true
+      application_name "#{ENV['FLUENTD_APPLICATION_APP'] || 'app' }"
+      enable_ilm true
+      ilm_policy {"policy":{"phases":{"hot":{"min_age":"1m","actions":{"rollover":{"max_age":"1d","max_size":"10gb"}}},"delete":{"min_age":"1d","actions":{"delete":{}} }}   }}
+      ilm_policy_overwrite
+      ilm_policy_id k8s-system
+      <buffer>
+        flush_thread_count 8
+        flush_interval 5s
+        chunk_limit_size 80M
+        queue_limit_length 64
+        retry_max_interval 30
+        retry_forever true 
+      </buffer>
+    </match>
+
+
+      multiline_start_regexp ^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3}[\s]+ERROR.+(\n|.)*
+      multiline_end_regexp ^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3}[\s]+(INFO|WARNING).*
+
+
+          format_firstline /\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}.\d{0,3} (?<level>[^\s]+) \[(?<thread>.*)\] (?<message>.*)(.|\n)*/
+          format1 /\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}.\d{0,3} (?<level>[^\s]+) \[(?<thread>.*)\] (?<message>.*)(.|\n)*/
+
+D:\monitoring\efk\efk\fluentd-config.yaml
+
+        <pattern>
+          format multiline    
+          format_firstline /\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}.\d{0,3} (?<level>[^\s]+) \[(?<thread>.*)\] (?<message>.*)(.|\n)*/
+          format1 /\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}.\d{0,3} (?<level>[^\s]+) \[(?<thread>.*)\] (?<message>.*)(.|\n)*/
+        </pattern>
+
+
+
+    <filter kubernetes.app***>
+      @type concat
+      key message
+      multiline_start_regexp /\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}.\d{0,3}/
+      multiline_end_regexp /\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}.\d{0,3}/
+    </filter>
+
+    <filter kubernetes.app***>
+      @type concat
+      key message
+      multiline_start_regexp /\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}.\d{0,3}/
+    </filter>
+
+      <parse>
+        @type multiline_grok
+        grok_pattern %{IP:ip_address}%{GREEDYDATA:message}
+        multiline_start_regexp /\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}.\d{0,3}/
+      </parse>
+
+      <parse>
+        @type multi_format
+        <pattern>
+          format cri
+          merge_cri_fields false
+        </pattern>
+        <pattern>
+          format json
+          time_key time
+          time_type string
+          time_format "%Y-%m-%dT%H:%M:%S.%NZ"
+          keep_time_key false
+        </pattern>
+        <pattern>
+          format none
+        </pattern>
+      </parse>
+
+    <filter kubernetes.app***>
+      @type concat
+      key loga
+      multiline_start_regexp /\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}.\d{0,3}(.|\n)*/
+      multiline_end_regexp  /\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}.\d{0,3}/
+    </filter>
+
+
+
+      <filter>
+        @type parser
+        key_name message
+        <parse>
+          @type multiline_grok
+          grok_pattern %{GREEDYDATA:mydata}
+        </parse>
+      </filter>
+      <match>
+        @type stdout
+      </match>
+
+    <filter kubernetes.app***>
+      @type parser
+      key_name message
+      reserve_data true
+      reserve_time true
+      <parse>
+        @type multiline_grok
+        grok_pattern %{IP:ip_address}%{GREEDYDATA:message}
+        multiline_start_regexp /\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}.\d{0,3}/
+      </parse>
+    </filter>    
+
+
+      <parse>
+        @type multiline_grok
+        grok_pattern %{IP:ip_address}%{GREEDYDATA:message}
+        multiline_start_regexp /\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}.\d{0,3}/
+      </parse>
+
+
+
+2024-04-15 07:35:40 +0000 [warn]: #0 dump an error event: error_class=Fluent::Plugin::Parser::ParserError error="parse failed invalid time format: value = INFO, error_class = ArgumentError, error = invalid date or strptime format - `INFO' `%Y-%m-%dT%H:%M:%S.%L%z'" location="/fluentd/vendor/bundle/ruby/3.2.0/gems/fluentd-1.16.3/lib/fluent/plugin/filter_parser.rb:110:in `rescue in filter_with_time'" tag="kubernetes.appvar.log.containers.scontract-backend-import-contract-esign-1_vcontract-monitor_import-contract-esign-c7444af08a78dda7e2a5657a8e1415dca9d510c3314b577f135c339a94d65cdf.log" time=2024-04-15 07:35:40.431773488 +0000 record={"date"=>"24-04-15", "message"=>"INFO  [MessageBroker-1] com.viettel.scontract.webapi.schedules.ContractLotImportSchedule: lambda$cronCreateContractImportLot$2(257) - [ContractLot] B3: Founds 0 processing contract lot", "docker"=>{"container_id"=>"c7444af08a78dda7e2a5657a8e1415dca9d510c3314b577f135c339a94d65cdf"}, "kubernetes"=>{"container_name"=>"import-contract-esign", "namespace_name"=>"vcontract-monitor", "pod_name"=>"scontract-backend-import-contract-esign-1", "pod_id"=>"50b25eff-2aa1-44a8-9677-2268282fa057", "pod_ip"=>"200.16.156.11", "host"=>"sco-k8s-08"}, "grokfailure"=>"No grok pattern matched"}
+2024-04-15 07:35:40 +0000 [warn]: #0 dump an error event: error_class=Fluent::Plugin::Parser::ParserError error="parse failed invalid time format: value = INFO, error_class = ArgumentError, error = invalid date or strptime format - `INFO' `%Y-%m-%dT%H:%M:%S.%L%z'" location="/fluentd/vendor/bundle/ruby/3.2.0/gems/fluentd-1.16.3/lib/fluent/plugin/filter_parser.rb:110:in `rescue in filter_with_time'" tag="kubernetes.appvar.log.containers.scontract-backend-import-contract-esign-1_vcontract-monitor_import-contract-esign-c7444af08a78dda7e2a5657a8e1415dca9d510c3314b577f135c339a94d65cdf.log" time=2024-04-15 07:35:40.432064042 +0000 record={"date"=>"24-04-15", "message"=>"INFO  [MessageBroker-3] com.viettel.scontract.webapi.schedules.ContractLotImportSchedule: cronDoneContractImportLot(289) - [ContractLot] B4: cronDoneContractImportLot starting on pod scontract-backend-import-contract-esign-1, id: 1...", "docker"=>{"container_id"=>"c7444af08a78dda7e2a5657a8e1415dca9d510c3314b577f135c339a94d65cdf"}, "kubernetes"=>{"container_name"=>"import-contract-esign", "namespace_name"=>"vcontract-monitor", "pod_name"=>"scontract-backend-import-contract-esign-1", "pod_id"=>"50b25eff-2aa1-44a8-9677-2268282fa057", "pod_ip"=>"200.16.156.11", "host"=>"sco-k8s-08"}, "grokfailure"=>"No grok pattern matched"}
+2024-04-15 07:35:40 +0000 [warn]: #0 dump an error event: error_class=Fluent::Plugin::Parser::ParserError error="parse failed invalid time format: value = INFO, error_class = ArgumentError, error = invalid date or strptime format - `INFO' `%Y-%m-%dT%H:%M:%S.%L%z'" location="/fluentd/vendor/bundle/ruby/3.2.0/gems/fluentd-1.16.3/lib/fluent/plugin/filter_parser.rb:110:in `rescue in filter_with_time'" tag="kubernetes.appvar.log.containers.scontract-backend-import-contract-esign-1_vcontract-monitor_import-contract-esign-c7444af08a78dda7e2a5657a8e1415dca9d510c3314b577f135c339a94d65cdf.log" time=2024-04-15 07:35:40.432300649 +0000 record={"date"=>"24-04-15", "message"=>"INFO  [MessageBroker-4] com.viettel.scontract.webapi.schedules.ContractLotImportSchedule: cronValdiateImportLot(189) - [ContractLot] B2: cronValidateContractExcel starting on pod scontract-backend-import-contract-esign-1, id: 1...", "docker"=>{"container_id"=>"c7444af08a78dda7e2a5657a8e1415dca9d510c3314b577f135c339a94d65cdf"}, "kubernetes"=>{"container_name"=>"import-contract-esign", "namespace_name"=>"vcontract-monitor", "pod_name"=>"scontract-backend-import-contract-esign-1", "pod_id"=>"50b25eff-2aa1-44a8-9677-2268282fa057", "pod_ip"=>"200.16.156.11", "host"=>"sco-k8s-08"}, "grokfailure"=>"No grok pattern matched"}
+2024-04-15 07:35:40 +0000 [warn]: #0 dump an error event: error_class=Fluent::Plugin::Parser::ParserError error="parse failed invalid time format: value = INFO, error_class = ArgumentError, error = invalid date or strptime format - `INFO' `%Y-%m-%dT%H:%M:%S.%L%z'" location="/fluentd/vendor/bundle/ruby/3.2.0/gems/fluentd-1.16.3/lib/fluent/plugin/filter_parser.rb:110:in `rescue in filter_with_time'" tag="kubernetes.appvar.log.containers.scontract-backend-import-contract-esign-1_vcontract-monitor_import-contract-esign-c7444af08a78dda7e2a5657a8e1415dca9d510c3314b577f135c339a94d65cdf.log" time=2024-04-15 07:35:40.432516267 +0000 record={"date"=>"24-04-15", "message"=>"INFO  [MessageBroker-4] com.viettel.scontract.webapi.schedules.ContractLotImportSchedule: lambda$cronValdiateImportLot$0(203) - [ContractLot] B2:Founds 0 processing contract lot", "docker"=>{"container_id"=>"c7444af08a78dda7e2a5657a8e1415dca9d510c3314b577f135c339a94d65cdf"}, "kubernetes"=>{"container_name"=>"import-contract-esign", "namespace_name"=>"vcontract-monitor", "pod_name"=>"scontract-backend-import-contract-esign-1", "pod_id"=>"50b25eff-2aa1-44a8-9677-2268282fa057", "pod_ip"=>"200.16.156.11", "host"=>"sco-k8s-08"}, "grokfailure"=>"No grok pattern matched"}
+2024-04-15 07:35:41 +0000 [warn]: #0 dump an error event: error_class=Fluent::Plugin::Parser::ParserError error="parse failed invalid time format: value = INFO, error_class = ArgumentError, error = invalid date or strptime format - `INFO' `%Y-%m-%dT%H:%M:%S.%L%z'" location="/fluentd/vendor/bundle/ruby/3.2.0/gems/fluentd-1.16.3/lib/fluent/plugin/filter_parser.rb:110:in `rescue in filter_with_time'" tag="kubernetes.appvar.log.containers.scontract-backend-import-contract-3_vcontract-app_import-contract-4f355d4eee2e8860b8bcb5f758c18e476b8bce010a94e2ae55a745162106b4a8.log" time=2024-04-15 07:35:41.413136047 +0000 record={"date"=>"24-04-15", "message"=>"INFO  [http-nio-8080-exec-7] com.viettel.scontract.services.impl.ConfigSignFlowServiceImpl: findAll(149) - ### HEALTH CHECK TO TENANT 1 ###", "docker"=>{"container_id"=>"4f355d4eee2e8860b8bcb5f758c18e476b8bce010a94e2ae55a745162106b4a8"}, "kubernetes"=>{"container_name"=>"import-contract", "namespace_name"=>"vcontract-app", "pod_name"=>"scontract-backend-import-contract-3", "pod_id"=>"3ef419e4-f0b6-4679-89ee-b9a65cfa77b7", "pod_ip"=>"200.16.156.46", "host"=>"sco-k8s-08"}, "grokfailure"=>"No grok pattern matched"}
+2024-04-15 07:35:41 +0000 [warn]: #0 dump an error event: error_class=Fluent::Plugin::Parser::ParserError error="parse failed invalid time format: value = INFO, error_class = ArgumentError, error = invalid date or strptime format - `INFO' `%Y-%m-%dT%H:%M:%S.%L%z'" location="/fluentd/vendor/bundle/ruby/3.2.0/gems/fluentd-1.16.3/lib/fluent/plugin/filter_parser.rb:110:in `rescue in filter_with_time'" tag="kubernetes.appvar.log.containers.scontract-backend-import-contract-3_vcontract-app_import-contract-4f355d4eee2e8860b8bcb5f758c18e476b8bce010a94e2ae55a745162106b4a8.log" time=2024-04-15 07:35:41.413482380 +0000 record={"date"=>"24-04-15", "message"=>"INFO  [MessageBroker-2] com.viettel.scontract.webapi.schedules.ContractLotImportSchedule: cronDoneContractImportLot(289) - [ContractLot] B4: cronDoneContractImportLot starting on pod scontract-backend-import-contract-3, id: 3...", "docker"=>{"container_id"=>"4f355d4eee2e8860b8bcb5f758c18e476b8bce010a94e2ae55a745162106b4a8"}, "kubernetes"=>{"container_name"=>"import-contract", "namespace_name"=>"vcontract-app", "pod_name"=>"scontract-backend-import-contract-3", "pod_id"=>"3ef419e4-f0b6-4679-89ee-b9a65cfa77b7", "pod_ip"=>"200.16.156.46", "host"=>"sco-k8s-08"}, "grokfailure"=>"No grok pattern matched"}
+2024-04-15 07:35:41 +0000 [warn]: #0 dump an error event: error_class=Fluent::Plugin::Parser::ParserError error="parse failed invalid time format: value = INFO, error_class = ArgumentError, error = invalid date or strptime format - `INFO' `%Y-%m-%dT%H:%M:%S.%L%z'" location="/fluentd/vendor/bundle/ruby/3.2.0/gems/fluentd-1.16.3/lib/fluent/plugin/filter_parser.rb:110:in `rescue in filter_with_time'" tag="kubernetes.appvar.log.containers.scontract-backend-import-contract-esign-1_vcontract-monitor_import-contract-esign-c7444af08a78dda7e2a5657a8e1415dca9d510c3314b577f135c339a94d65cdf.log" time=2024-04-15 07:35:41.432338468 +0000 record={"date"=>"24-04-15", "message"=>"INFO  [MessageBroker-3] com.viettel.scontract.webapi.schedules.ContractLotImportSchedule: lambda$cronDoneContractImportLot$4(305) - [ContractLot] B4: Founds 0 processing contract lot", "docker"=>{"container_id"=>"c7444af08a78dda7e2a5657a8e1415dca9d510c3314b577f135c339a94d65cdf"}, "kubernetes"=>{"container_name"=>"import-contract-esign", "namespace_name"=>"vcontract-monitor", "pod_name"=>"scontract-backend-import-contract-esign-1", "pod_id"=>"50b25eff-2aa1-44a8-9677-2268282fa057", "pod_ip"=>"200.16.156.11", "host"=>"sco-k8s-08"}, "grokfailure"=>"No grok pattern matched"}
+2024-04-15 07:35:41 +0000 [warn]: #0 dump an error event: error_class=Fluent::Plugin::Parser::ParserError error="parse failed invalid time format: value = INFO, error_class = ArgumentError, error = invalid date or strptime format - `INFO' `%Y-%m-%dT%H:%M:%S.%L%z'" location="/fluentd/vendor/bundle/ruby/3.2.0/gems/fluentd-1.16.3/lib/fluent/plugin/filter_parser.rb:110:in `rescue in filter_with_time'" tag="kubernetes.appvar.log.containers.scontract-backend-import-contract-esign-1_vcontract-monitor_import-contract-esign-c7444af08a78dda7e2a5657a8e1415dca9d510c3314b577f135c339a94d65cdf.log" time=2024-04-15 07:35:41.432629221 +0000 record={"date"=>"24-04-15", "message"=>"INFO  [MessageBroker-2] com.viettel.scontract.webapi.schedules.ContractLotImportSchedule: cronCreateContractImportLot(240) - [ContractLot] B3: cronCreateContractImportLot starting on pod scontract-backend-import-contract-esign-1, id: 1...", "docker"=>{"container_id"=>"c7444af08a78dda7e2a5657a8e1415dca9d510c3314b577f135c339a94d65cdf"}, "kubernetes"=>{"container_name"=>"import-contract-esign", "namespace_name"=>"vcontract-monitor", "pod_name"=>"scontract-backend-import-contract-esign-1", "pod_id"=>"50b25eff-2aa1-44a8-9677-2268282fa057", "pod_ip"=>"200.16.156.11", "host"=>"sco-k8s-08"}, "grokfailure"=>"No grok pattern matched"}
+2024-04-15 07:35:42 +0000 [warn]: #0 dump an error event: error_class=Fluent::Plugin::Parser::ParserError error="parse failed invalid time format: value = INFO, error_class = ArgumentError, error = invalid date or strptime format - `INFO' `%Y-%m-%dT%H:%M:%S.%L%z'" location="/fluentd/vendor/bundle/ruby/3.2.0/gems/fluentd-1.16.3/lib/fluent/plugin/filter_parser.rb:110:in `rescue in filter_with_time'" tag="kubernetes.appvar.log.containers.scontract-backend-user-76cd6fddd6-5z8km_vcontract-app_scontract-backend-user-195fa395b908f67ed4eca175ea7a04f20642929b479a705a2c83dde3ffe6f785.log" time=2024-04-15 07:35:42.527499976 +0000 record={"date"=>"24-04-15", "message"=>"INFO  [http-nio-8080-exec-13] com.viettel.scontract.webapi.config.security.JwtRequestFilter: doFilterInternal(147) - requestUrl: /scontract-web-api/api/anonymous/list-enteprise/BC75D547FCEE5AB9FC6FA0C730590EF79ACAF7787A5574A9CFBE5AA38FF25020/emlkdm4vUGRxN0d1R0pmSjdFa29qQT09", "docker"=>{"container_id"=>"195fa395b908f67ed4eca175ea7a04f20642929b479a705a2c83dde3ffe6f785"}, "kubernetes"=>{"container_name"=>"scontract-backend-user", "namespace_name"=>"vcontract-app", "pod_name"=>"scontract-backend-user-76cd6fddd6-5z8km", "pod_id"=>"725860f4-e5bb-4854-a531-945a95a978bc", "pod_ip"=>"200.16.156.25", "host"=>"sco-k8s-08"}, "grokfailure"=>"No grok pattern matched"}
+2024-04-15 07:35:42 +0000 [warn]: #0 dump an error event: error_class=Fluent::Plugin::Parser::ParserError error="parse failed invalid time format: value = INFO, error_class = ArgumentError, error = invalid date or strptime format - `INFO' `%Y-%m-%dT%H:%M:%S.%L%z'" location="/fluentd/vendor/bundle/ruby/3.2.0/gems/fluentd-1.16.3/lib/fluent/plugin/filter_parser.rb:110:in `rescue in filter_with_time'" tag="kubernetes.appvar.log.containers.scontract-backend-user-76cd6fddd6-5z8km_vcontract-app_scontract-backend-user-195fa395b908f67ed4eca175ea7a04f20642929b479a705a2c83dde3ffe6f785.log" time=2024-04-15 07:35:42.527862540 +0000 record={"date"=>"24-04-15", "message"=>"INFO  [http-nio-8080-exec-12] com.viettel.scontract.webapi.config.security.JwtRequestFilter: doFilterInternal(147) - requestUrl: /scontract-web-api/api/verify-account/file-provision", "docker"=>{"container_id"=>"195fa395b908f67ed4eca175ea7a04f20642929b479a705a2c83dde3ffe6f785"}, "kubernetes"=>{"container_name"=>"scontract-backend-user", "namespace_name"=>"vcontract-app", "pod_name"=>"scontract-backend-user-76cd6fddd6-5z8km", "pod_id"=>"725860f4-e5bb-4854-a531-945a95a978bc", "pod_ip"=>"200.16.156.25", "host"=>"sco-k8s-08"}, "grokfailure"=>"No grok pattern matched"}
+2024-04-15 07:35:44 +0000 [warn]: #0 dump an error event: error_class=Fluent::Plugin::Parser::ParserError error="parse failed invalid time format: value = INFO, error_class = ArgumentError, error = invalid date or strptime format - `INFO' `%Y-%m-%dT%H:%M:%S.%L%z'" location="/fluentd/vendor/bundle/ruby/3.2.0/gems/fluentd-1.16.3/lib/fluent/plugin/filter_parser.rb:110:in `rescue in filter_with_time'" tag="kubernetes.appvar.log.containers.scontract-backend-import-contract-3_vcontract-app_import-contract-4f355d4eee2e8860b8bcb5f758c18e476b8bce010a94e2ae55a745162106b4a8.log" time=2024-04-15 07:35:44.412730234 +0000 record={"date"=>"24-04-15", "message"=>"INFO  [MessageBroker-2] com.viettel.scontract.webapi.schedules.ContractLotImportSchedule: lambda$cronDoneContractImportLot$4(305) - [ContractLot] B4: Founds 0 processing contract lot", "docker"=>{"container_id"=>"4f355d4eee2e8860b8bcb5f758c18e476b8bce010a94e2ae55a745162106b4a8"}, "kubernetes"=>{"container_name"=>"import-contract", "namespace_name"=>"vcontract-app", "pod_name"=>"scontract-backend-import-contract-3", "pod_id"=>"3ef419e4-f0b6-4679-89ee-b9a65cfa77b7", "pod_ip"=>"200.16.156.46", "host"=>"sco-k8s-08"}, "grokfailure"=>"No grok pattern matched"}
+2024-04-15 07:35:44 +0000 [warn]: #0 dump an error event: error_class=Fluent::Plugin::Parser::ParserError error="parse failed invalid time format: value = INFO, error_class = ArgumentError, error = invalid date or strptime format - `INFO' `%Y-%m-%dT%H:%M:%S.%L%z'" location="/fluentd/vendor/bundle/ruby/3.2.0/gems/fluentd-1.16.3/lib/fluent/plugin/filter_parser.rb:110:in `rescue in filter_with_time'" tag="kubernetes.appvar.log.containers.scontract-backend-import-contract-3_vcontract-app_import-contract-4f355d4eee2e8860b8bcb5f758c18e476b8bce010a94e2ae55a745162106b4a8.log" time=2024-04-15 07:35:44.413077852 +0000 record={"date"=>"24-04-15", "message"=>"INFO  [MessageBroker-4] com.viettel.scontract.webapi.schedules.ContractLotImportSchedule: cronValdiateImportLot(189) - [ContractLot] B2: cronValidateContractExcel starting on pod scontract-backend-import-contract-3, id: 3...", "docker"=>{"container_id"=>"4f355d4eee2e8860b8bcb5f758c18e476b8bce010a94e2ae55a745162106b4a8"}, "kubernetes"=>{"container_name"=>"import-contract", "namespace_name"=>"vcontract-app", "pod_name"=>"scontract-backend-import-contract-3", "pod_id"=>"3ef419e4-f0b6-4679-89ee-b9a65cfa77b7", "pod_ip"=>"200.16.156.46", "host"=>"sco-k8s-08"}, "grokfailure"=>"No grok pattern matched"}
+2024-04-15 07:35:44 +0000 [warn]: #0 dump an error event: error_class=Fluent::Plugin::Parser::ParserError error="parse failed invalid time format: value = INFO, error_class = ArgumentError, error = invalid date or strptime format - `INFO' `%Y-%m-%dT%H:%M:%S.%L%z'" location="/fluentd/vendor/bundle/ruby/3.2.0/gems/fluentd-1.16.3/lib/fluent/plugin/filter_parser.rb:110:in `rescue in filter_with_time'" tag="kubernetes.appvar.log.containers.scontract-backend-user-76cd6fddd6-5z8km_vcontract-app_scontract-backend-user-195fa395b908f67ed4eca175ea7a04f20642929b479a705a2c83dde3ffe6f785.log" time=2024-04-15 07:35:44.527175139 +0000 record={"date"=>"24-04-15", "message"=>"INFO  [http-nio-8080-exec-12] com.viettel.scontract.webapi.utilities.ResponseUtil: writeException(90) - UnauthorizedException", "docker"=>{"container_id"=>"195fa395b908f67ed4eca175ea7a04f20642929b479a705a2c83dde3ffe6f785"}, "kubernetes"=>{"container_name"=>"scontract-backend-user", "namespace_name"=>"vcontract-app", "pod_name"=>"scontract-backend-user-76cd6fddd6-5z8km", "pod_id"=>"725860f4-e5bb-4854-a531-945a95a978bc", "pod_ip"=>"200.16.156.25", "host"=>"sco-k8s-08"}, "grokfailure"=>"No grok pattern matched"}
+2024-04-15 07:35:45 +0000 [warn]: #0 dump an error event: error_class=Fluent::Plugin::Parser::ParserError error="parse failed invalid time format: value = INFO, error_class = ArgumentError, error = invalid date or strptime format - `INFO' `%Y-%m-%dT%H:%M:%S.%L%z'" location="/fluentd/vendor/bundle/ruby/3.2.0/gems/fluentd-1.16.3/lib/fluent/plugin/filter_parser.rb:110:in `rescue in filter_with_time'" tag="kubernetes.appvar.log.containers.scontract-backend-user-76cd6fddd6-5z8km_vcontract-app_scontract-backend-user-195fa395b908f67ed4eca175ea7a04f20642929b479a705a2c83dde3ffe6f785.log" time=2024-04-15 07:35:45.527762917 +0000 record={"date"=>"24-04-15", "message"=>"INFO  [http-nio-8080-exec-9] com.viettel.scontract.webapi.config.security.JwtRequestFilter: doFilterInternal(147) - requestUrl: /scontract-web-api/api/contract/user-statistic", "docker"=>{"container_id"=>"195fa395b908f67ed4eca175ea7a04f20642929b479a705a2c83dde3ffe6f785"}, "kubernetes"=>{"container_name"=>"scontract-backend-user", "namespace_name"=>"vcontract-app", "pod_name"=>"scontract-backend-user-76cd6fddd6-5z8km", "pod_id"=>"725860f4-e5bb-4854-a531-945a95a978bc", "pod_ip"=>"200.16.156.25", "host"=>"sco-k8s-08"}, "grokfailure"=>"No grok pattern matched"}
+2024-04-15 07:35:45 +0000 [warn]: #0 dump an error event: error_class=Fluent::Plugin::Parser::ParserError error="parse failed invalid time format: value = INFO, error_class = ArgumentError, error = invalid date or strptime format - `INFO' `%Y-%m-%dT%H:%M:%S.%L%z'" location="/fluentd/vendor/bundle/ruby/3.2.0/gems/fluentd-1.16.3/lib/fluent/plugin/filter_parser.rb:110:in `rescue in filter_with_time'" tag="kubernetes.appvar.log.containers.scontract-backend-user-76cd6fddd6-5z8km_vcontract-app_scontract-backend-user-195fa395b908f67ed4eca175ea7a04f20642929b479a705a2c83dde3ffe6f785.log" time=2024-04-15 07:35:45.528120462 +0000 record={"date"=>"24-04-15", "message"=>"INFO  [http-nio-8080-exec-16] com.viettel.scontract.services.impl.AppParamServiceImpl: findAllByParamCode(37) - ### HEALTH CHECK TO MASTER paramCode: MOBILE_APP_VERSION ###", "docker"=>{"container_id"=>"195fa395b908f67ed4eca175ea7a04f20642929b479a705a2c83dde3ffe6f785"}, "kubernetes"=>{"container_name"=>"scontract-backend-user", "namespace_name"=>"vcontract-app", "pod_name"=>"scontract-backend-user-76cd6fddd6-5z8km", "pod_id"=>"725860f4-e5bb-4854-a531-945a95a978bc", "pod_ip"=>"200.16.156.25", "host"=>"sco-k8s-08"}, "grokfailure"=>"No grok pattern matched"}
+2024-04-15 07:35:45 +0000 [warn]: #0 got incomplete line before first line from /var/log/containers/scontract-frontend-c7b9f57c4-7g7nq_vcontract-app_scontract-frontend-53be95e7e1ea9bd07223a6683397c0e9b2ed0ad59eef7efd97c8d64af07b108f.log: "2024-04-15T14:35:45.039156182+07:00 stdout F 10.207.58.161 - - [15/Apr/2024:14:35:45 +0700] \"GET / HTTP/1.1\" 200 6907\n"
+2024-04-15 07:35:45 +0000 [warn]: #0 got incomplete line before first line from /var/log/containers/scontract-frontend-c7b9f57c4-7g7nq_vcontract-app_scontract-frontend-53be95e7e1ea9bd07223a6683397c0e9b2ed0ad59eef7efd97c8d64af07b108f.log: "2024-04-15T14:35:45.039174615+07:00 stdout F 10.207.58.161 - - [15/Apr/2024:14:35:45 +0700] \"GET /enterprise-login HTTP/1.1\" 200 6907\n"
+2024-04-15 07:35:45 +0000 [warn]: #0 got incomplete line before first line from /var/log/containers/scontract-frontend-user-785f4bdf4-9ds7n_vcontract-app_scontract-frontend-user-166edbcfb4651092a9e06bdb40c7645e0e30037ec61f04f7dbde0a6e631ed84b.log: "2024-04-15T14:35:44.834390738+07:00 stdout F 10.207.58.161 - - [15/Apr/2024:14:35:44 +0700] \"GET / HTTP/1.1\" 200 7098\n"
+2024-04-15 07:35:45 +0000 [warn]: #0 got incomplete line before first line from /var/log/containers/scontract-frontend-user-785f4bdf4-9ds7n_vcontract-app_scontract-frontend-user-166edbcfb4651092a9e06bdb40c7645e0e30037ec61f04f7dbde0a6e631ed84b.log: "2024-04-15T14:35:44.834518995+07:00 stdout F 10.207.58.161 - - [15/Apr/2024:14:35:44 +0700] \"GET /enterprise-login HTTP/1.1\" 200 7098\n"
+2024-04-15 07:35:46 +0000 [warn]: #0 dump an error event: error_class=Fluent::Plugin::Parser::ParserError error="parse failed invalid time format: value = INFO, error_class = ArgumentError, error = invalid date or strptime format - `INFO' `%Y-%m-%dT%H:%M:%S.%L%z'" location="/fluentd/vendor/bundle/ruby/3.2.0/gems/fluentd-1.16.3/lib/fluent/plugin/filter_parser.rb:110:in `rescue in filter_with_time'" tag="kubernetes.appvar.log.containers.scontract-backend-import-contract-3_vcontract-app_import-contract-4f355d4eee2e8860b8bcb5f758c18e476b8bce010a94e2ae55a745162106b4a8.log" time=2024-04-15 07:35:46.413619600 +0000 record={"date"=>"24-04-15", "message"=>"INFO  [MessageBroker-4] com.viettel.scontract.webapi.schedules.ContractLotImportSchedule: lambda$cronValdiateImportLot$0(203) - [ContractLot] B2:Founds 0 processing contract lot", "docker"=>{"container_id"=>"4f355d4eee2e8860b8bcb5f758c18e476b8bce010a94e2ae55a745162106b4a8"}, "kubernetes"=>{"container_name"=>"import-contract", "namespace_name"=>"vcontract-app", "pod_name"=>"scontract-backend-import-contract-3", "pod_id"=>"3ef419e4-f0b6-4679-89ee-b9a65cfa77b7", "pod_ip"=>"200.16.156.46", "host"=>"sco-k8s-08"}, "grokfailure"=>"No grok pattern matched"}
+2024-04-15 07:35:46 +0000 [warn]: #0 dump an error event: error_class=Fluent::Plugin::Parser::ParserError error="parse failed invalid time format: value = INFO, error_class = ArgumentError, error = invalid date or strptime format - `INFO' `%Y-%m-%dT%H:%M:%S.%L%z'" location="/fluentd/vendor/bundle/ruby/3.2.0/gems/fluentd-1.16.3/lib/fluent/plugin/filter_parser.rb:110:in `rescue in filter_with_time'" tag="kubernetes.appvar.log.containers.scontract-backend-import-contract-3_vcontract-app_import-contract-4f355d4eee2e8860b8bcb5f758c18e476b8bce010a94e2ae55a745162106b4a8.log" time=2024-04-15 07:35:46.414052574 +0000 record={"date"=>"24-04-15", "message"=>"INFO  [MessageBroker-3] com.viettel.scontract.webapi.schedules.ContractLotImportSchedule: cronCreateContractImportLot(240) - [ContractLot] B3: cronCreateContractImportLot starting on pod scontract-backend-import-contract-3, id: 3...", "docker"=>{"container_id"=>"4f355d4eee2e8860b8bcb5f758c18e476b8bce010a94e2ae55a745162106b4a8"}, "kubernetes"=>{"container_name"=>"import-contract", "namespace_name"=>"vcontract-app", "pod_name"=>"scontract-backend-import-contract-3", "pod_id"=>"3ef419e4-f0b6-4679-89ee-b9a65cfa77b7", "pod_ip"=>"200.16.156.46", "host"=>"sco-k8s-08"}, "grokfailure"=>"No grok pattern matched"}
+2024-04-15 07:35:46 +0000 [warn]: #0 dump an error event: error_class=Fluent::Plugin::Parser::ParserError error="parse failed invalid time format: value = INFO, error_class = ArgumentError, error = invalid date or strptime format - `INFO' `%Y-%m-%dT%H:%M:%S.%L%z'" location="/fluentd/vendor/bundle/ruby/3.2.0/gems/fluentd-1.16.3/lib/fluent/plugin/filter_parser.rb:110:in `rescue in filter_with_time'" tag="kubernetes.appvar.log.containers.scontract-backend-user-76cd6fddd6-5z8km_vcontract-app_scontract-backend-user-195fa395b908f67ed4eca175ea7a04f20642929b479a705a2c83dde3ffe6f785.log" time=2024-04-15 07:35:46.527287260 +0000 record={"date"=>"24-04-15", "message"=>"INFO  [http-nio-8080-exec-16] com.viettel.scontract.services.impl.ConfigSignFlowServiceImpl: findAll(149) - ### HEALTH CHECK TO TENANT 1 ###", "docker"=>{"container_id"=>"195fa395b908f67ed4eca175ea7a04f20642929b479a705a2c83dde3ffe6f785"}, "kubernetes"=>{"container_name"=>"scontract-backend-user", "namespace_name"=>"vcontract-app", "pod_name"=>"scontract-backend-user-76cd6fddd6-5z8km", "pod_id"=>"725860f4-e5bb-4854-a531-945a95a978bc", "pod_ip"=>"200.16.156.25", "host"=>"sco-k8s-08"}, "grokfailure"=>"No grok pattern matched"}
+2024-04-15 07:35:48 +0000 [warn]: #0 dump an error event: error_class=Fluent::Plugin::Parser::ParserError error="parse failed invalid time format: value = INFO, error_class = ArgumentError, error = invalid date or strptime format - `INFO' `%Y-%m-%dT%H:%M:%S.%L%z'" location="/fluentd/vendor/bundle/ruby/3.2.0/gems/fluentd-1.16.3/lib/fluent/plugin/filter_parser.rb:110:in `rescue in filter_with_time'" tag="kubernetes.appvar.log.containers.scontract-backend-import-contract-esign-1_vcontract-monitor_import-contract-esign-c7444af08a78dda7e2a5657a8e1415dca9d510c3314b577f135c339a94d65cdf.log" time=2024-04-15 07:35:48.432805995 +0000 record={"date"=>"24-04-15", "message"=>"INFO  [MessageBroker-2] com.viettel.scontract.webapi.schedules.ContractLotImportSchedule: lambda$cronCreateContractImportLot$2(257) - [ContractLot] B3: Founds 0 processing contract lot", "docker"=>{"container_id"=>"c7444af08a78dda7e2a5657a8e1415dca9d510c3314b577f135c339a94d65cdf"}, "kubernetes"=>{"container_name"=>"import-contract-esign", "namespace_name"=>"vcontract-monitor", "pod_name"=>"scontract-backend-import-contract-esign-1", "pod_id"=>"50b25eff-2aa1-44a8-9677-2268282fa057", "pod_ip"=>"200.16.156.11", "host"=>"sco-k8s-08"}, "grokfailure"=>"No grok pattern matched"}
+2024-04-15 07:35:48 +0000 [warn]: #0 dump an error event: error_class=Fluent::Plugin::Parser::ParserError error="parse failed invalid time format: value = INFO, error_class = ArgumentError, error = invalid date or strptime format - `INFO' `%Y-%m-%dT%H:%M:%S.%L%z'" location="/fluentd/vendor/bundle/ruby/3.2.0/gems/fluentd-1.16.3/lib/fluent/plugin/filter_parser.rb:110:in `rescue in filter_with_time'" tag="kubernetes.appvar.log.containers.scontract-backend-import-contract-esign-1_vcontract-monitor_import-contract-esign-c7444af08a78dda7e2a5657a8e1415dca9d510c3314b577f135c339a94d65cdf.log" time=2024-04-15 07:35:48.433170420 +0000 record={"date"=>"24-04-15", "message"=>"INFO  [http-nio-8080-exec-5] com.viettel.scontract.services.impl.AppParamServiceImpl: findAllByParamCode(37) - ### HEALTH CHECK TO MASTER paramCode: MOBILE_APP_VERSION ###", "docker"=>{"container_id"=>"c7444af08a78dda7e2a5657a8e1415dca9d510c3314b577f135c339a94d65cdf"}, "kubernetes"=>{"container_name"=>"import-contract-esign", "namespace_name"=>"vcontract-monitor", "pod_name"=>"scontract-backend-import-contract-esign-1", "pod_id"=>"50b25eff-2aa1-44a8-9677-2268282fa057", "pod_ip"=>"200.16.156.11", "host"=>"sco-k8s-08"}, "grokfailure"=>"No grok pattern matched"}
+2024-04-15

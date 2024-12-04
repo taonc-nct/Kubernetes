@@ -1,0 +1,114 @@
+---
+# Source: kibana/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: kibana
+  namespace: elastic
+  labels: 
+    app: kibana
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5601
+      protocol: TCP
+      name: http
+      targetPort: 5601
+  selector:
+    app: kibana
+    release: "release-name"
+---
+apiVersion: v1
+data:
+  ELASTICSEARCH_PASSWORD: cE1xbkJaeGRoV05hZWFRcHp6ZWM=
+  ELASTICSEARCH_USERNAME: a2liYW5hX3N5c3RlbQ==
+  # XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: aGlldWh2QEBAQEBAQEBAQEBAQEBAMjEzMjMxMzEyMzIxMjMxMzEyMzEzMTIzMTMxMzEzMTMxMzEyMzE=
+kind: Secret
+metadata:
+  name: kibana-secret
+  labels:
+    app: kibana
+  namespace: elastic
+---
+# Source: kibana/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kibana
+  namespace: elastic
+  labels: 
+    app: kibana
+    release: "release-name"
+    heritage: Helm
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: kibana
+      release: "release-name"
+  template:
+    metadata:
+      labels:
+        app: kibana
+        release: "release-name"
+      annotations:
+    spec:
+      automountServiceAccountToken: true
+      securityContext:
+        fsGroup: 1000
+      volumes:
+        - name: kibana-tokens
+          emptyDir: {}
+        - name: elasticsearch-certs
+          secret:
+            secretName: elasticsearch-master-certs
+      initContainers:
+      containers:
+      - name: kibana
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+          runAsUser: 1000
+        image: "registry.kcntt.net/kibana:7.17.9"
+        imagePullPolicy: "IfNotPresent"
+        env:
+          - name: ELASTICSEARCH_HOSTS
+            value: '["http://elastic-0.elasticsearch.elastic:9200","http://elastic-1.elasticsearch.elastic:9200","http://elastic-2.elasticsearch.elastic:9200"]'
+          - name: ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES
+            value: "/usr/share/kibana/config/certs/ca.crt"
+          - name: ELASTICSEARCH.SSL.VERIFICATIONMODE 
+            value: "none"
+          - name: SERVER_HOST
+            value: "0.0.0.0"
+          - name: ELASTICSEARCH_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: kibana-secret
+                key: ELASTICSEARCH_USERNAME
+          - name: ELASTICSEARCH_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: kibana-secret
+                key: ELASTICSEARCH_PASSWORD
+          - name: NODE_OPTIONS
+            value: --max-old-space-size=1800
+        ports:
+        - containerPort: 5601
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+          requests:
+            cpu: 1000m
+            memory: 2Gi
+        volumeMounts:
+          - name: elasticsearch-certs
+            mountPath: /usr/share/kibana/config/certs
+            readOnly: true
+          - name: kibana-tokens
+            mountPath: /usr/share/kibana/config/tokens
+            readOnly: true

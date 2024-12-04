@@ -1,0 +1,17 @@
+velero install \
+   --provider aws \
+   --plugins velero/velero-plugin-for-aws:v1.9.0
+   --bucket velero \
+   --secret-file ./credentials-velero \
+   --backup-location-config region=minio,s3ForcePathStyle=true,s3Url=http://minio-http.velero.svc:9000,publicUrl=http://172.18.0.2:30000 --use-restic
+
+
+
+velero install --provider aws --plugins velero/velero-plugin-for-aws:v1.9.0 --bucket velero --secret-file  --C:\Users\Administrator\Downloads\velero-v1.14.0-linux-amd64.tar\velero-v1.14.0-linux-amd64\examples\minio\credentials-velero backup-location-config region=minio, s3ForcePathStyle=true, s3Url=http://minio-http.velero.svc:9000, publicUrl=http://172.18.0.2:30000
+
+velero backup create test --include-namespaces nginx
+https://velero.io/docs/v1.4/resource-filtering/
+
+
+velero install --provider aws --plugins velero/velero-plugin-for-aws:v1.9.1 --bucket velero --secret-file ./credentials-velero --use-volume-snapshots=false --backup-location-config region=minio,s3ForcePathStyle="true",s3Url=http://minio.velero.minio:9000
+velero install --provider aws --plugins velero/velero-plugin-for-aws:v1.9.1 --bucket velero --secret-file ./credentials-velero --use-volume-snapshots=false --backup-location-config region=minio,s3ForcePathStyle="true",s3Url=http://minio.velero.svc:9000

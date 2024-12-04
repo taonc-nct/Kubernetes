@@ -1,0 +1,142 @@
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: velero
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio-pvc
+  namespace: velero
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+  
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: velero
+  name: minio
+  labels:
+    component: minio
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      component: minio
+  template:
+    metadata:
+      labels:
+        component: minio
+    spec:
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: minio-pvc      
+      - name: storage
+        emptyDir: {}
+      - name: config
+        emptyDir: {}
+      containers:
+      - name: minio
+        image: minio/minio:latest
+        imagePullPolicy: IfNotPresent
+        args:
+        - server
+        - /storage
+        - --config-dir=/config
+        - minio server /data --console-address :9001
+        env:
+        - name: MINIO_ACCESS_KEY
+          value: "minio"
+        - name: MINIO_SECRET_KEY
+          value: "minio123"
+        - name: CONSOLE_SECURE_TLS_REDIRECT
+          value: "off"  
+        ports:
+        - name: http
+          containerPort: 9000
+          protocol: TCP
+        - name: http-console
+          containerPort: 9001
+          protocol: TCP        
+        volumeMounts:
+        - name: storage
+          mountPath: "/storage"
+        - name: config
+          mountPath: "/config"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: velero
+  name: http-console-minio
+  labels:
+    component: minio
+spec:
+  # ClusterIP is recommended for production environments.
+  # Change to NodePort if needed per documentation,
+  # but only if you run Minio in a test/trial environment, for example with Minikube.
+  type: ClusterIP
+  ports:
+    - port: 9001
+      name: http-console
+  selector:
+    component: minio
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: velero
+  name: minio
+  labels:
+    component: minio
+spec:
+  # ClusterIP is recommended for production environments.
+  # Change to NodePort if needed per documentation,
+  # but only if you run Minio in a test/trial environment, for example with Minikube.
+  type: ClusterIP
+  ports:
+    - port: 9000
+      name: minio
+  selector:
+    component: minio
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  namespace: velero
+  name: minio-setup
+  labels:
+    component: minio
+spec:
+  template:
+    metadata:
+      name: minio-setup
+    spec:
+      restartPolicy: OnFailure
+      volumes:
+      - name: config
+        emptyDir: {}
+      containers:
+      - name: mc
+        image: minio/mc:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/sh
+        - -c
+        - "mc --config-dir=/config config host add velero http://minio:9001 minio minio123 && mc --config-dir=/config mb -p velero/velero"
+        volumeMounts:
+        - name: config
+          mountPath: "/config"

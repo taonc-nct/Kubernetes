@@ -7,7 +7,7 @@ metadata:
     app: kube-etcd
     release: k8s
     owner: PCN-KCNTT-VTT
-    developer: hieuhv13-taonc-dunglq
+    developer: hieuhv13-taonc
   name: kube-etcd
   namespace: monitoring
 spec:

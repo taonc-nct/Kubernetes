@@ -1,0 +1,194 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluentd-config
+  namespace: elastic
+data:
+  fluent.conf: |-
+    ################################################################
+    # This source gets all logs from local docker host
+    @include pods-kind-fluent.conf
+    @include elastic-fluent.conf
+
+  index_template.json: |-
+    {
+      "index_patterns": [
+          "k8s-sys*"
+        ],
+        "settings": {
+            "index": {
+                "number_of_replicas": "1"
+            }
+        }
+    }
+  index_template_app.json: |-
+    {
+      "index_patterns": [
+          "k8s-app*"
+        ],
+        "settings": {
+            "index": {
+                "number_of_replicas": "1"
+            }
+        }
+    }
+
+  pods-kind-fluent.conf: |-
+    <source>
+      @type monitor_agent
+      @id monitor
+      bind 0.0.0.0
+      port 20050
+    </source>
+
+    <source>  
+      @type prometheus
+      @id prometheus
+      bind 0.0.0.0
+      port 20040
+      metrics_path /metrics
+      aggregated_metrics_path /aggregated_metrics
+    </source>
+
+    <source>
+      @type prometheus_monitor
+      @id prometheus_monitor
+      interval 5
+      <labels>
+        host ${echo $K8S_NODE_NAME}
+      </labels>
+    </source>
+
+    <source>
+      @type tail
+      read_from_head true
+      tag kubernetes.app*
+      path /var/log/containers/scontract*.log,/var/log/containers/vscontract*.log
+      exclude_path ["/var/log/containers/fluent*.log","/var/log/containers/prometheus-*.log","/var/log/containers/calico-node-*.log","/var/log/containers/vcontract-logstash-*.log"]
+      pos_file /var/log/fluentd-app.log.pos
+      <parse>
+        @type multi_format
+        <pattern>
+          format json
+          time_key time
+          time_type string
+          time_format "%Y-%m-%dT%H:%M:%S.%NZ"
+          keep_time_key false
+        </pattern>
+        <pattern>
+          format none
+        </pattern>
+      </parse>
+    </source>
+
+    <source>
+      @type tail
+      read_from_head true
+      tag kubernetes.system*
+      path /var/log/containers/*.log
+      exclude_path ["/var/log/containers/scontract-*.log","/var/log/containers/vcontract-*.log","/var/log/containers/fluent*","/var/log/containers/calico-node-*.log","/var/log/containers/vscontract-*.log","/var/log/containers/vcontract-logstash-*.log" ]
+      pos_file /var/log/fluentd-containers.log.pos
+      <parse>
+        @type multi_format
+        <pattern>
+          format json
+          time_key time
+          time_type string
+          time_format "%Y-%m-%dT%H:%M:%S.%NZ"
+          keep_time_key false
+        </pattern>
+        <pattern>
+          format none
+        </pattern>
+      </parse>
+    </source>
+
+    <filter kubernetes.app**>
+      @type kubernetes_metadata
+      #@id filter_kube_metadata
+      kubernetes_url "#{ENV['FLUENT_FILTER_KUBERNETES_URL'] || 'https://' + ENV.fetch('KUBERNETES_SERVICE_HOST') + ':' + ENV.fetch('KUBERNETES_SERVICE_PORT') + '/api'}"
+      verify_ssl "#{ENV['KUBERNETES_VERIFY_SSL'] || true}"
+      ca_file "#{ENV['KUBERNETES_CA_FILE']}"
+      skip_labels "#{ENV['FLUENT_KUBERNETES_METADATA_SKIP_LABELS'] || 'false'}"
+      skip_container_metadata "#{ENV['FLUENT_KUBERNETES_METADATA_SKIP_CONTAINER_METADATA'] || 'false'}"
+      skip_master_url "#{ENV['FLUENT_KUBERNETES_METADATA_SKIP_MASTER_URL'] || 'false'}"
+      skip_namespace_metadata "#{ENV['FLUENT_KUBERNETES_METADATA_SKIP_NAMESPACE_METADATA'] || 'false'}"
+    </filter>
+
+    <filter kubernetes.system**>
+      @type kubernetes_metadata
+      #@id filter_kube_metadata_2
+      kubernetes_url "#{ENV['FLUENT_FILTER_KUBERNETES_URL'] || 'https://' + ENV.fetch('KUBERNETES_SERVICE_HOST') + ':' + ENV.fetch('KUBERNETES_SERVICE_PORT') + '/api'}"
+      verify_ssl "#{ENV['KUBERNETES_VERIFY_SSL'] || true}"
+      ca_file "#{ENV['KUBERNETES_CA_FILE']}"
+      skip_labels "#{ENV['FLUENT_KUBERNETES_METADATA_SKIP_LABELS'] || 'false'}"
+      skip_container_metadata "#{ENV['FLUENT_KUBERNETES_METADATA_SKIP_CONTAINER_METADATA'] || 'false'}"
+      skip_master_url "#{ENV['FLUENT_KUBERNETES_METADATA_SKIP_MASTER_URL'] || 'false'}"
+      skip_namespace_metadata "#{ENV['FLUENT_KUBERNETES_METADATA_SKIP_NAMESPACE_METADATA'] || 'false'}"
+    </filter>
+
+  # file-fluent.conf: |-
+  #   <match **>
+  #     @type file
+  #     path /tmp/file-test.log
+  #   </match>
+
+  elastic-fluent.conf: |-
+    <match kubernetes.app****>
+      @type elasticsearch
+      user "#{ENV['FLUENT_ELASTICSEARCH_USER']}"
+      hosts "#{ENV['FLUENTD_ELASTIC_HOSTS']}"
+      password "#{ENV['FLUENT_ELASTICSEARCH_PASSWORD']}"
+      include_tag_key true
+      tag_key "#{ENV['FLUENTD_TAG_KEY'] || 'fluentd-k8s-app'}"
+      index_date_pattern "now/d"
+      template_name "k8s-app"
+      template_file "/fluentd/etc/index_template_app.json"
+      index_name k8s-app
+      include_timestamp true
+      suppress_type_name true
+      ssl_verify false
+      rollover_index true
+      application_name "#{ENV['FLUENTD_APPLICATION_APP'] || 'app' }"
+      enable_ilm true
+      ilm_policy {"policy":{"phases":{"hot":{"min_age":"0ms","actions":{"rollover":{"max_age":"5m","max_size":"10gb"}}},"delete":{"min_age":"30d","actions":{"delete":{}} }}   }}
+      ilm_policy_overwrite
+      ilm_policy_id k8s-app
+      <buffer>
+        flush_thread_count 8
+        flush_interval 5s
+        chunk_limit_size 80M
+        queue_limit_length 64
+        retry_max_interval 30
+        retry_forever true 
+      </buffer>
+    </match>
+
+    <match kubernetes.system***>
+      @type elasticsearch
+      user "#{ENV['FLUENT_ELASTICSEARCH_USER']}"
+      hosts "#{ENV['FLUENTD_ELASTIC_HOSTS']}"
+      password "#{ENV['FLUENT_ELASTICSEARCH_PASSWORD']}"
+      include_tag_key true
+      tag_key "#{ENV['FLUENTD_TAG_KEY'] || 'fluentd-k8s-logs'}"
+      index_date_pattern "now/d"
+      template_name "k8s-sys"
+      template_file "/fluentd/etc/index_template.json"
+      index_name k8s-sys
+      include_timestamp true
+      suppress_type_name true
+      ssl_verify false
+      rollover_index true
+      enable_ilm true
+      ilm_policy {"policy":{"phases":{"hot":{"min_age":"1m","actions":{"rollover":{"max_age":"1d","max_size":"10gb"}}},"delete":{"min_age":"1d","actions":{"delete":{}} }}   }}
+      ilm_policy_overwrite
+      ilm_policy_id k8s-system
+      <buffer>
+        flush_thread_count 8
+        flush_interval 5s
+        chunk_limit_size 80M
+        queue_limit_length 64
+        retry_max_interval 30
+        retry_forever true 
+      </buffer>
+    </match>

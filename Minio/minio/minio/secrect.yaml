@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minio-secrect
+  namespace: minio-dev
+data:
+  rootUser: minio # required field for kubernetes.io/basic-auth
+  rootPass: minio123 # required field for kubernetes.io/basic-auth
+type: Opaque

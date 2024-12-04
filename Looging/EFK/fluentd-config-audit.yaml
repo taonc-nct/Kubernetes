@@ -1,0 +1,138 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluentd-config-ms
+  namespace: elastic
+data:
+  fluent.conf: |-
+    @include pods-kind-fluent.conf
+    @include pods-filter.conf
+    #@include file-fluent.conf
+    @include elastic-fluent.conf
+
+  index_template.json: |-
+    {
+      "index_patterns": [
+          "k8s-master*"
+        ],
+        "settings": {
+            "index": {
+                "number_of_replicas": "1"
+            }
+        }
+    }
+
+  pods-kind-fluent.conf: |-
+    <source>
+      @type monitor_agent
+      @id monitor
+      bind 0.0.0.0
+      port 20050
+    </source>
+
+    <source>  
+      @type prometheus
+      @id prometheus
+      bind 0.0.0.0
+      port 20040
+      metrics_path /metrics
+      aggregated_metrics_path /aggregated_metrics
+    </source>
+
+    <source>
+      @type prometheus_monitor
+      @id prometheus_monitor
+      interval 5
+      <labels>
+        host ${echo $K8S_NODE_NAME}
+      </labels>
+    </source>
+
+    <source>
+      @type tail
+      read_from_head true
+      tag kubernetes.admin.*
+      path /var/log/containers/kube-apiserver*.log
+      pos_file /var/log/containers/fluentd-containers.log.pos
+      <parse>
+        @type multi_format
+        <pattern>
+          format json
+          time_key time
+          time_type string
+          time_format "%Y-%m-%dT%H:%M:%S.%NZ"
+          keep_time_key false
+        </pattern>
+        <pattern>
+          format none
+        </pattern>
+      </parse>
+    </source>
+
+  pods-filter.conf: |-
+    <filter kubernetes.admin.**>
+      @type kubernetes_metadata
+      #@log_level warn
+      @id filter_kube_metadata
+      kubernetes_url "#{ENV['FLUENT_FILTER_KUBERNETES_URL'] || 'https://' + ENV.fetch('KUBERNETES_SERVICE_HOST') + ':' + ENV.fetch('KUBERNETES_SERVICE_PORT') + '/api'}"
+      verify_ssl "#{ENV['KUBERNETES_VERIFY_SSL'] || true}"
+      ca_file "#{ENV['KUBERNETES_CA_FILE']}"
+      skip_labels "#{ENV['FLUENT_KUBERNETES_METADATA_SKIP_LABELS'] || 'false'}"
+      skip_container_metadata "#{ENV['FLUENT_KUBERNETES_METADATA_SKIP_CONTAINER_METADATA'] || 'false'}"
+      skip_master_url "#{ENV['FLUENT_KUBERNETES_METADATA_SKIP_MASTER_URL'] || 'false'}"
+      skip_namespace_metadata "#{ENV['FLUENT_KUBERNETES_METADATA_SKIP_NAMESPACE_METADATA'] || 'false'}"
+    </filter>
+
+    <filter kubernetes.admin.**>
+      @id kube_api_audit_normalize
+      @type record_transformer
+      auto_typecast false
+      enable_ruby true
+      <record>
+       host "#{ENV['K8S_NODE_NAME']}"
+       responseObject ${record["responseObject"].nil? ? "none": record["responseObject"].to_json}
+       requestObject ${record["requestObject"].nil? ? "none": record["requestObject"].to_json}
+       origin kubernetes-api-audit
+       tag ${tag}
+       </record>
+    </filter>
+
+  file-fluent.conf: |-
+    <match **>
+      @type file
+      path /tmp/file-test.log
+    </match>
+
+  elastic-fluent.conf: |-
+    <match **>
+      @type elasticsearch
+      user "#{ENV['FLUENT_ELASTICSEARCH_USER']}"
+      hosts "#{ENV['FLUENTD_ELASTIC_HOSTS']}"
+      password "#{ENV['FLUENT_ELASTICSEARCH_PASSWORD']}"
+      include_tag_key true
+      tag_key "#{ENV['FLUENTD_TAG_KEY'] || 'fluentd-k8s-master'}"
+      index_date_pattern "now/d"
+      template_name "k8s"
+      template_file "/fluentd/etc/index_template.json"
+      index_name k8s-master
+      include_timestamp true
+      suppress_type_name true
+      ssl_verify false
+      rollover_index true
+      application_name "#{ENV['FLUENTD_APPLICATION_APP'] || 'app2' }"
+      ilm_policy {"policy":{"phases":{"hot":{"min_age":"1m","actions":{"rollover":{"max_age":"1d","max_size":"10gb"}}},"delete":{"min_age":"1d","actions":{"delete":{}} }}   }}
+      ilm_policy_id k8s
+      ilm_policy_overwrite
+      enable_ilm true
+      log_es_400_reason true
+      
+      <buffer>
+        flush_thread_count 8
+        flush_interval 5s
+        chunk_limit_size 80M
+        queue_limit_length 64
+        retry_max_interval 30
+        retry_forever true 
+      </buffer>
+    </match>
+
