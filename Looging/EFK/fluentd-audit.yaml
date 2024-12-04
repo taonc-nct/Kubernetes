@@ -82,7 +82,7 @@ spec:
           failureThreshold: 3
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
-        imagePullPolicy: IfNotPresent      
+        imagePullPolicy: IfNotPresent
       terminationGracePeriodSeconds: 30
       volumes:
       - name: fluentd-config
