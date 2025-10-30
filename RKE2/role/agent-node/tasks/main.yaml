@@ -1,0 +1,20 @@
+- name: Ensure /etc/rancher/rke2 exists
+  file:
+    path: /etc/rancher/rke2
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Template RKE2 agent config
+  template:
+    src: rke2-config-agent.yaml.j2
+    dest: /etc/rancher/rke2/config.yaml
+    mode: "0644"
+
+- name: Enable and start RKE2 agent service
+  systemd:
+    name: rke2-agent
+    enabled: yes
+    state: started
+    daemon_reload: yes

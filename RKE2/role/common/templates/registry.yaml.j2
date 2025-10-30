@@ -1,0 +1,22 @@
+mirrors:
+  "docker.io":
+    endpoint:
+      - "{{ registry_endpoint }}"
+{% if registry_name != 'docker.io' %}
+  "{{ registry_name }}":
+    endpoint:
+      - "{{ registry_endpoint }}"
+{% endif %}
+
+configs:
+  "{{ registry_endpoint }}":
+{% if registry_auth_enabled %}
+    auth:
+      username: "{{ registry_username }}"
+      password: "{{ registry_password }}"
+{% endif %}
+{% if registry_ca_cert %}
+    tls:
+      ca_file: "{{ registry_ca_cert }}"
+      insecure_skip_verify: {{ registry_tls_skip_verify | lower }}
+{% endif %}

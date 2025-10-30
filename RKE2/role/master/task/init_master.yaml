@@ -1,0 +1,41 @@
+---
+- name: Create config dir
+  file:
+    path: /etc/rancher/rke2
+    state: directory
+
+- name: Copy RKE2 package to node
+  copy:
+    src: files/rke2.linux-amd64.tar.gz
+    dest: /opt/rke2.linux-amd64.tar.gz
+    mode: '0644'
+
+- name: Extract RKE2 binaries
+  unarchive:
+    src: /opt/rke2.linux-amd64.tar.gz
+    dest: /usr/local
+    remote_src: true
+  args:
+    creates: /usr/local/bin/rke2
+
+- name: Create symlinks for rke2 binaries
+  file:
+    src: "/usr/local/bin/{{ item }}"
+    dest: "/usr/bin/{{ item }}"
+    state: link
+  loop:
+    - rke2
+    - rke2-server
+    - rke2-agent
+
+- name: Template init config
+  template:
+    src: rke2-config-init.yaml.j2
+    dest: /etc/rancher/rke2/config.yaml
+
+- name: Enable and start RKE2 service
+  systemd:
+    name: rke2-server
+    state: started
+    enabled: true
+    daemon_reload: true

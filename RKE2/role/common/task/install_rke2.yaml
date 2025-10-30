@@ -1,0 +1,58 @@
+---
+# roles/common/tasks/install_rke2.yml
+
+- name: Check if RKE2 is already installed
+  stat:
+    path: /usr/local/bin/rke2
+  register: rke2_bin
+
+- name: Install RKE2 (offline mode)
+  when:
+    - not rke2_bin.stat.exists
+    - rke2_install_mode == "offline"
+  block:
+    - name: Copy RKE2 artifacts to node
+      copy:
+        src: rke2-artifacts/
+        dest: "{{ rke2_artifact_path }}/"
+        mode: '0755'
+      delegate_to: localhost
+      run_once: true
+      when: inventory_hostname == groups['masters'][0]
+
+    - name: Copy artifacts from primary master to other nodes
+      synchronize:
+        src: "{{ rke2_artifact_path }}/"
+        dest: "{{ rke2_artifact_path }}/"
+        recursive: yes
+      when: inventory_hostname != groups['masters'][0]
+
+    - name: Run RKE2 installer (offline)
+      environment:
+        INSTALL_RKE2_ARTIFACT_PATH: "{{ rke2_artifact_path }}"
+      command: "sh {{ rke2_artifact_path }}/install.sh"
+      args:
+        creates: /usr/local/bin/rke2
+
+- name: Install RKE2 (online mode)
+  when:
+    - not rke2_bin.stat.exists
+    - rke2_install_mode == "online"
+  shell: |
+    curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="{{ rke2_version }}" sh -
+  args:
+    creates: /usr/local/bin/rke2
+
+- name: Enable and start RKE2 service (disabled by role-specific config)
+  systemd:
+    name: rke2-server
+    enabled: true
+    state: stopped
+  when: "'masters' in group_names"
+
+- name: Enable and start RKE2 agent service (disabled by role-specific config)
+  systemd:
+    name: rke2-agent
+    enabled: true
+    state: stopped
+  when: "'workers' in group_names"

@@ -1,0 +1,18 @@
+---
+- name: Precheck | Start RKE2 pre-installation validation
+  debug:
+    msg: "🚀 Starting RKE2 precheck on {{ inventory_hostname }}"
+# {{inventory_hostname}} có thể coi đây là biến tự động
+
+- name: Include system validation
+  include_tasks: check_system.yml
+
+- name: Include kernel validation
+  include_tasks: check_kernel.yml
+
+- name: Include network validation
+  include_tasks: check_network.yml
+
+- name: Precheck | Completed successfully
+  debug:
+    msg: "✅ All prechecks passed on {{ inventory_hostname }}"

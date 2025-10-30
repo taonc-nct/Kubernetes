@@ -1,0 +1,30 @@
+---
+- name: Install RKE2 server binary
+  ansible.builtin.shell:
+    cmd: curl -sfL https://get.rke2.io | sh -
+    creates: /usr/local/bin/rke2
+
+- name: Create RKE2 config directory
+  file:
+    path: /etc/rancher/rke2
+    state: directory
+
+- name: Write RKE2 config for joining master
+  copy:
+    dest: /etc/rancher/rke2/config.yaml
+    content: |
+      server: "{{ hostvars[primary_master].master_url }}"
+      token: "{{ hostvars[primary_master].node_token | trim }}"
+      cni: calico
+      tls-san:
+      {{ groups['masters'] | map('extract', hostvars, ['ansible_ssh_host']) | list | to_nice_yaml }}
+      node-external-ip:
+        - "{{ ansible_ssh_host }}"
+      node-ip:
+        - "{{ ansible_ssh_host }}"
+
+- name: Start RKE2 server
+  ansible.builtin.service:
+    name: rke2-server
+    state: started
+    enabled: true

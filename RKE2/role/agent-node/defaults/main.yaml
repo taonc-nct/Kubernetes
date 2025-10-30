@@ -1,0 +1,6 @@
+# RKE2 Agent defaults
+rke2_token: ""               # Token lấy từ server init
+lb_hostname: ""              # Load balancer hoặc server endpoint
+rke2_cni: "cilium"
+rke2_debug: false
+rke2_disabled_components: [] # danh sách components disable trên agent, có thể để trống

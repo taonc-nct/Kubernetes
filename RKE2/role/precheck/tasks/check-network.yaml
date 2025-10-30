@@ -1,0 +1,27 @@
+---
+- name: Check default network interface
+  ansible.builtin.command: ip route show default
+  register: default_route
+  changed_when: false
+
+- name: Extract default interface name
+  set_fact:
+    default_iface: "{{ default_route.stdout.split(' ')[4] | default('eth0') }}"
+
+- name: Check that network interface is up
+  ansible.builtin.command: ip link show {{ default_iface }}
+  register: iface_status
+  failed_when: "'state UP' not in iface_status.stdout"
+  changed_when: false
+
+- name: Check DNS resolution
+  ansible.builtin.command: getent hosts google.com
+  register: dns_check
+  failed_when: dns_check.rc != 0
+  changed_when: false
+
+- name: Check if port 9345 (RKE2 server) is free
+  ansible.builtin.shell: ss -ltn | grep ':9345' || true
+  register: port_check
+  failed_when: port_check.stdout != ""
+  changed_when: false

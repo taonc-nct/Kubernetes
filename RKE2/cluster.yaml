@@ -1,0 +1,29 @@
+---
+- name: Pre-check environment
+  hosts: all
+  become: true
+  roles:
+    - precheck
+
+- name: Prepare all nodes
+  hosts: all
+  become: true
+  roles:
+    - common
+
+- name: Setup control-plane nodes
+  hosts: masters
+  become: true
+  roles:
+    - master
+
+- name: Join worker nodes
+  hosts: workers
+  become: true
+  roles:
+    - worker
+
+- name: Retrieve kubeconfig
+  hosts: localhost
+  roles:
+    - postconfig

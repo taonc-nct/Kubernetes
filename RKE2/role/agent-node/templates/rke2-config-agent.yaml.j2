@@ -1,0 +1,20 @@
+# RKE2 agent node configuration
+server: https://{{ lb_hostname }}:9345
+token: {{ rke2_token }}
+cni: {{ cluster_cni }}
+disable-kube-proxy: {{ disable_kube_proxy }}
+tls-san:
+{% for san in tls_san %}
+  - {{ san }}
+{% endfor %}
+node-external-ip:
+  - {{ ansible_ssh_host }}
+node-ip:
+  - {{ ansible_ssh_host }}
+cluster-cidr: {{ cluster_cidr }}
+service-cidr: {{ service_cidr }}
+disable:
+  - rke2-snapshot-controller
+  - rke2-snapshot-controller-crd
+  - rke2-snapshot-validation-webhook
+system-default-registry: {{ system_default_registry }}

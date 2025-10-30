@@ -1,0 +1,14 @@
+rke2_cni: "cilium"
+rke2_cilium_ebpf: true
+rke2_disable_kube_proxy: true
+
+
+min_kernel_version: "4.19"
+min_memory_mb: 2048
+min_cpu_cores: 2
+
+required_packages:
+  - curl
+  - iproute2
+  - systemd
+  - bash

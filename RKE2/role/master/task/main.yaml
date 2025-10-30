@@ -1,0 +1,4 @@
+---
+# Nếu là primary master thì gọi bootstrap.yml
+- name: Include bootstrap or join
+  include_tasks: "{{ 'bootstrap.yml' if inventory_hostname == primary_master else 'join.yml' }}"

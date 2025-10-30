@@ -1,0 +1,12 @@
+---
+# roles/common/tasks/main.yml
+
+- name: Include system configuration tasks
+  import_tasks: configure_system.yml
+
+- name: Include RKE2 installation tasks
+  import_tasks: install_rke2.yml
+
+- name: Include registry configuration
+  import_tasks: configure_registry.yml
+  when: registry_enabled | default(false)

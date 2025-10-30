@@ -1,0 +1,11 @@
+# roles/precheck/tasks/summary.yml
+---
+- name: ✅ Precheck summary
+  debug:
+    msg: |
+      ✅ System precheck completed successfully.
+      Detected kernel: {{ kernel_major_minor }}
+      CNI: {{ rke2_cni }}
+      Cilium eBPF: {{ rke2_cilium_ebpf }}
+      Calico eBPF: {{ rke2_calico_ebpf }}
+      Disable kube-proxy: {{ rke2_disable_kube_proxy }}

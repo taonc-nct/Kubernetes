@@ -1,0 +1,34 @@
+---
+- name: Check total memory
+  ansible.builtin.command: free -m
+  register: mem_info
+  changed_when: false
+
+- name: Verify minimum memory
+  assert:
+    that:
+      - ansible_memtotal_mb >= min_memory_mb
+    fail_msg: "❌ Not enough memory. Found {{ ansible_memtotal_mb }}MB, need at least {{ min_memory_mb }}MB."
+
+- name: Check CPU core count
+  assert:
+    that:
+      - ansible_processor_vcpus >= min_cpu_cores
+    fail_msg: "❌ Not enough CPU cores. Found {{ ansible_processor_vcpus }}, need at least {{ min_cpu_cores }} cores."
+
+- name: Check required packages installed
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: Assert required packages are present
+  assert:
+    that:
+      - item in ansible_facts.packages
+    fail_msg: "❌ Missing package {{ item }}. Please install it before proceeding."
+  loop: "{{ required_packages }}"
+
+- name: Check if systemd is running
+  ansible.builtin.shell: pidof systemd
+  register: systemd_check
+  failed_when: systemd_check.rc != 0
+  changed_when: false

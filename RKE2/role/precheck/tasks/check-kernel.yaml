@@ -1,0 +1,51 @@
+---
+- name: Get kernel version
+  command: uname -r
+  register: kernel_version
+  changed_when: false
+
+- name: Extract major.minor version
+  set_fact:
+    kernel_major_minor: "{{ kernel_version.stdout.split('-')[0].split('.')[:2] | join('.') }}"
+
+- name: Show detected kernel version
+  debug:
+    msg: "🧩 Kernel detected: {{ kernel_major_minor }}"
+
+# --- Xác định xem có dùng eBPF mode hay không ---
+- name: Determine if eBPF mode is enabled
+  set_fact:
+    ebpf_enabled: >-
+      {{ (rke2_cni == 'cilium' and rke2_cilium_ebpf | bool) or
+         (rke2_cni == 'calico' and rke2_calico_ebpf | bool) }}
+
+# --- Kiểm tra version kernel ---
+- name: Fail if kernel is too old for eBPF mode
+  fail:
+    msg: |
+      ❌ Kernel {{ kernel_major_minor }} is too old for eBPF mode.
+      eBPF requires Linux kernel >= {{ min_kernel_version }}.
+      Please either:
+        1. Upgrade your kernel, or
+        2. Disable eBPF in your configuration (set *_ebpf: false)
+  when:
+    - ebpf_enabled
+    - (kernel_major_minor is version(min_kernel_version, '<'))
+
+# --- In cảnh báo nếu eBPF bị tắt do kernel thấp ---
+- name: Auto-disable eBPF if kernel version too low (optional soft mode)
+  when:
+    - ebpf_enabled
+    - (kernel_major_minor is version(min_kernel_version, '<'))
+  set_fact:
+    rke2_cilium_ebpf: false
+    rke2_calico_ebpf: false
+
+- name: Warn user about eBPF being disabled
+  debug:
+    msg: |
+      ⚠️ Kernel {{ kernel_major_minor }} < {{ min_kernel_version }}.
+      Automatically disabled eBPF mode for {{ rke2_cni }}.
+  when:
+    - ebpf_enabled
+    - (kernel_major_minor is version(min_kernel_version, '<'))

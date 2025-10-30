@@ -1,0 +1,16 @@
+---
+# roles/common/vars/main.yml
+
+rke2_install_mode: "offline"           # hoặc "online"
+rke2_artifact_path: "/root/rke2-artifacts"
+rke2_install_script: "/root/rke2-artifacts/install.sh"
+rke2_version: "v1.30.2+rke2r1"
+
+registry_enabled: false
+registry_name: "docker.io"
+registry_endpoint: "https://registry.local:5000"
+registry_auth_enabled: false
+registry_username: ""
+registry_password: ""
+registry_tls_skip_verify: false
+registry_ca_cert: ""

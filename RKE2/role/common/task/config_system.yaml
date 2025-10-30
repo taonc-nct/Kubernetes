@@ -1,0 +1,41 @@
+---
+# roles/common/tasks/configure_system.yml
+
+- name: Ensure required directories exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /etc/rancher/rke2
+    - /var/lib/rancher/rke2
+    - /etc/rke2
+    - /var/log/rke2
+
+- name: Disable swap (RKE2 requirement)
+  command: swapoff -a
+  when: ansible_swaptotal_mb > 0
+
+- name: Ensure swap is disabled in fstab
+  replace:
+    path: /etc/fstab
+    regexp: '(^[^#].*\sswap\s+)'
+    replace: '# \1'
+  notify: reboot_if_required
+
+- name: Load required kernel modules
+  modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - br_netfilter
+    - overlay
+
+- name: Ensure sysctl params for Kubernetes networking
+  copy:
+    dest: /etc/sysctl.d/99-kubernetes.conf
+    content: |
+      net.ipv4.ip_forward = 1
+      net.bridge.bridge-nf-call-iptables = 1
+      net.bridge.bridge-nf-call-ip6tables = 1
+  notify: reload_sysctl

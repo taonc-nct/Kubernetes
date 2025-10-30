@@ -1,0 +1,43 @@
+---
+- name: Install RKE2 server binary
+  ansible.builtin.shell:
+    cmd: curl -sfL https://get.rke2.io | sh -
+    creates: /usr/local/bin/rke2
+
+- name: Create RKE2 config directory
+  file:
+    path: /etc/rancher/rke2
+    state: directory
+
+- name: Collect master IPs
+  set_fact:
+    master_ips: "{{ groups['masters'] | map('extract', hostvars, ['ansible_ssh_host']) | list }}"
+
+- name: Write RKE2 config for primary master
+  copy:
+    dest: /etc/rancher/rke2/config.yaml
+    content: |
+      cni: calico
+      tls-san:
+      {{ master_ips | to_nice_yaml }}
+      node-external-ip:
+        - "{{ ansible_ssh_host }}"
+      node-ip:
+        - "{{ ansible_ssh_host }}"
+      disable-kube-proxy: false
+
+- name: Start RKE2 server
+  ansible.builtin.service:
+    name: rke2-server
+    state: started
+    enabled: true
+
+- name: Expose token to other nodes
+  slurp:
+    src: /var/lib/rancher/rke2/server/node-token
+  register: node_token_b64
+
+- name: Set cluster facts
+  set_fact:
+    master_url: "https://{{ ansible_ssh_host }}:9345"
+    node_token: "{{ node_token_b64.content | b64decode }}"

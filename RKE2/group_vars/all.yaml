@@ -1,0 +1,54 @@
+# ---- Global RKE2 installation config ----
+rke2_install_mode: "offline"                
+rke2_artifact_path: "/root/rke2-artifacts"  
+rke2_install_script: "/root/rke2-artifacts/install.sh"
+rke2_version: "v1.30.2+rke2r1"              
+
+cluster_name: "onprem-ha-cluster"
+cluster_domain: "cluster.local"
+
+# Load balancer info
+lb_hostname: "rke2-lb.example.com"
+lb_ip: "rke2-lb.example.com"
+
+# Network
+cluster_cidr: "10.42.0.0/16"
+service_cidr: "10.43.0.0/16"
+
+# CNI choice: canal | calico | cilium
+cluster_cni: "cilium"
+disable_kube_proxy: true
+
+# Registry (optional)
+system_default_registry: "registry.local:5000"
+
+# Token
+rke2_token: "my-shared-secret"
+
+# Kernel requirements
+min_kernel_version: "4.19"
+
+# eBPF
+rke2_cilium_ebpf: true
+rke2_calico_ebpf: false
+
+# Registry configuration
+registry_enabled: true
+registry_name: "registry.onprem.local:5000"
+registry_endpoint: "https://registry.onprem.local:5000"
+registry_auth_enabled: true
+registry_username: "rke2user"
+registry_password: "SuperSecretPassword"
+
+# Optional TLS config
+registry_tls_skip_verify: false        # true nếu registry dùng HTTP
+registry_ca_cert: "files/ca.crt"       # đường dẫn file cert nội bộ (nếu có)
+
+# /etc/rancher/rke2/config.yaml
+disable:
+  - rke2-coredns
+  - rke2-ingress-nginx
+  - rke2-metrics-server
+  - rke2-snapshot-controller
+  - rke2-snapshot-controller-crd
+  - rke2-snapshot-validation-webhook
