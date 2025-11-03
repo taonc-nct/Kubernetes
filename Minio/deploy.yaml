@@ -2,16 +2,16 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: minio-dev # Change this value if you want a different namespace name
+  name: minio # Change this value if you want a different namespace name
   labels:
-    name: minio-dev # Change this value to match metadata.name
+    name: minio # Change this value to match metadata.name
 ---
 
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: minio-pvc
-  namespace: minio-dev
+  namespace: minio
 spec:
   accessModes:
     - ReadWriteOnce
@@ -26,7 +26,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: minio
-  namespace: minio-dev
+  namespace: minio
   labels:
     app: minio
 spec:
@@ -43,12 +43,12 @@ spec:
             claimName: minio-pvc
       containers:
         - name: minio
-          image: minio/minio:RELEASE.2024-06-11T03-13-30Z
+          image: minio/minio:RELEASE.2025-09-07T16-13-09Z
           ports:
             - name: http-console
               containerPort: 9090
               protocol: TCP
-            - name: http
+            - name: minio
               containerPort: 9000
               protocol: TCP
           imagePullPolicy: IfNotPresent
@@ -95,8 +95,8 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: http-console
-  namespace: minio-dev
+  name: minio-console
+  namespace: minio
 spec:
   selector:
     app: minio
@@ -105,18 +105,18 @@ spec:
       name: http-console
       protocol: TCP
   type: ClusterIP
-
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: http
-  namespace: minio-dev
+  name: minio
+  namespace: minio
 spec:
   selector:
     app: minio
   ports:
-    - port: 9000
-      name: http
+    - name: minio
+      port: 9000
+      targetPort: 9000
       protocol: TCP
   type: ClusterIP
