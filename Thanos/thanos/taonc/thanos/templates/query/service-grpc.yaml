@@ -1,0 +1,26 @@
+---
+# Source: thanos/templates/query/service-grpc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: release-name-thanos-query-grpc
+  namespace: thanos
+  labels:
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: thanos
+    app.kubernetes.io/version: 0.39.2
+    helm.sh/chart: thanos-17.3.1
+    app.kubernetes.io/component: query
+spec:
+  type: ClusterIP
+  ports:
+    - port: 10901
+      targetPort: grpc
+      protocol: TCP
+      name: grpc
+      nodePort: null
+  selector:
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/name: thanos
+    app.kubernetes.io/component: query

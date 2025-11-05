@@ -1,0 +1,21 @@
+---
+# Source: thanos/templates/query/pdb.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: release-name-thanos-query
+  namespace: thanos
+  labels:
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: thanos
+    app.kubernetes.io/version: 0.39.2
+    helm.sh/chart: thanos-17.3.1
+    app.kubernetes.io/component: query
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: release-name
+      app.kubernetes.io/name: thanos
+      app.kubernetes.io/component: query

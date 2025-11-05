@@ -1,0 +1,27 @@
+---
+# Source: thanos/templates/receive/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: release-name-thanos-receive
+  namespace: thanos
+  labels:
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: thanos
+    app.kubernetes.io/version: 0.39.2
+    helm.sh/chart: thanos-17.3.1
+    app.kubernetes.io/component: receive
+data:
+  hashrings.json: |-
+    [
+      { "hashring" : "tenat-1",
+        "endpoints": ["release-name-thanos-receive.thanos.svc.cluster.local:10901",],
+        "tenants": ["tenant-1"]
+      },
+      { "hashring" : "tenat-2",
+        "endpoints": ["release-name-thanos-receive.thanos.svc.cluster.local:10901",],
+        "tenants": ["tenant-2"]
+      }
+    ]
+

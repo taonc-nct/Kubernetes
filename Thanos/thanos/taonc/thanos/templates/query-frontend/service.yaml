@@ -1,0 +1,27 @@
+---
+# Source: thanos/templates/query-frontend/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: release-name-thanos-query-frontend
+  namespace: thanos
+  labels:
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: thanos
+    app.kubernetes.io/version: 0.39.2
+    helm.sh/chart: thanos-17.3.1
+    app.kubernetes.io/component: query-frontend
+    
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9090
+      targetPort: http
+      protocol: TCP
+      name: http
+      nodePort: null
+  selector:
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/name: thanos
+    app.kubernetes.io/component: query-frontend

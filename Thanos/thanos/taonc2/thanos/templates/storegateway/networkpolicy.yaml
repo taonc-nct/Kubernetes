@@ -1,0 +1,31 @@
+---
+# Source: thanos/templates/storegateway/networkpolicy.yaml
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: release-name-thanos-storegateway
+  namespace: "thanos"
+  labels:
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: thanos
+    app.kubernetes.io/version: 0.39.2
+    helm.sh/chart: thanos-17.3.1
+    app.kubernetes.io/component: storegateway
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: release-name
+      app.kubernetes.io/name: thanos
+      app.kubernetes.io/component: storegateway
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    - {}
+  ingress:
+    - ports:
+        - port: 10902
+        - port: 9090
+        - port: 10901
+        - port: 10901

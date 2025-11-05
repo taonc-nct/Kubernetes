@@ -1,0 +1,17 @@
+---
+# Source: thanos/templates/ruler/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: release-name-thanos-ruler
+  namespace: thanos
+  labels:
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: thanos
+    app.kubernetes.io/version: 0.39.2
+    helm.sh/chart: thanos-17.3.1
+    app.kubernetes.io/component: ruler
+data:
+  ruler.yml: |-
+    ruler.yml

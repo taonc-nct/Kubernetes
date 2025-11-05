@@ -1,0 +1,166 @@
+---
+# Source: thanos/templates/ruler/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: release-name-thanos-ruler
+  namespace: thanos
+  labels:
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: thanos
+    app.kubernetes.io/version: 0.39.2
+    helm.sh/chart: thanos-17.3.1
+    app.kubernetes.io/component: ruler
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  podManagementPolicy: OrderedReady
+  serviceName: release-name-thanos-ruler-headless
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: release-name
+      app.kubernetes.io/name: thanos
+      app.kubernetes.io/component: ruler
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: release-name
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: thanos
+        app.kubernetes.io/version: 0.39.2
+        helm.sh/chart: thanos-17.3.1
+        app.kubernetes.io/component: ruler
+      annotations:
+        checksum/objstore-configuration: 64b016128037d48c38e769ef9aa583b909da67edb7b811fe30a1d8e393602e6b
+        checksum/ruler-configuration: efa0af9714b42f7013283e7884693d5176a68df9fa0e67ab850954b4170ae877
+    spec:
+      
+      serviceAccountName: release-name-thanos-ruler
+      automountServiceAccountToken: true
+      affinity:
+        podAffinity:
+          
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/instance: release-name
+                    app.kubernetes.io/name: thanos
+                    app.kubernetes.io/component: ruler
+                topologyKey: kubernetes.io/hostname
+              weight: 1
+        nodeAffinity:
+          
+      securityContext:
+        fsGroup: 1001
+        fsGroupChangePolicy: Always
+        supplementalGroups: []
+        sysctls: []
+      containers:
+        - name: ruler
+          image: docker.io/bitnami/thanos:0.39.2-debian-12-r2
+          imagePullPolicy: "IfNotPresent"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+            seLinuxOptions: {}
+            seccompProfile:
+              type: RuntimeDefault
+          args:
+            - rule
+            - --log.level=info
+            - --log.format=logfmt
+            - --grpc-address=0.0.0.0:10901
+            - --http-address=0.0.0.0:10902
+            - --data-dir=/data
+            - --eval-interval=1m
+            - --alertmanagers.config-file=/conf/alertmanagers/alertmanagers_config.yml
+            - --query=dnssrv+_http._tcp.release-name-thanos-query.thanos.svc.cluster.local
+            - --alert.query-url=http://release-name-thanos-query.thanos.svc.cluster.local:9090
+            - --label=replica="$(POD_NAME)"
+            - --label=ruler_cluster=""
+            - --alert.label-drop=replica
+            - --objstore.config-file=/conf/objstore/objstore.yml
+            - --rule-file=/conf/rules/*.yml
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          ports:
+            - name: http
+              containerPort: 10902
+              protocol: TCP
+            - name: grpc
+              containerPort: 10901
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 6
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 30
+            httpGet:
+              path: /-/healthy
+              port: http
+              scheme: HTTP
+          readinessProbe:
+            failureThreshold: 6
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 30
+            httpGet:
+              path: /-/ready
+              port: http
+              scheme: HTTP
+          resources:
+            limits:
+              cpu: 150m
+              ephemeral-storage: 2Gi
+              memory: 192Mi
+            requests:
+              cpu: 100m
+              ephemeral-storage: 50Mi
+              memory: 128Mi
+          volumeMounts:
+            - name: ruler-config
+              mountPath: /conf/rules
+            - name: objstore-config
+              mountPath: /conf/objstore
+            - name: data
+              mountPath: /data
+            - name: alertmanagers-config
+              mountPath: /conf/alertmanagers
+      volumes:
+        - name: ruler-config
+          configMap:
+            name: release-name-thanos-ruler
+        - name: objstore-config
+          secret:
+            secretName: release-name-thanos-objstore-secret
+        - name: alertmanagers-config
+          secret:
+            secretName: release-name-thanos-ruler-alertmanagers-config
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: data
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "8Gi"
